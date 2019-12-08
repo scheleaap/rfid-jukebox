@@ -6,9 +6,8 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-numpy = "*"
-pyzbar = "*"
-imutils = "*"
+mfrc522 = "*"
+spidev = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.5"

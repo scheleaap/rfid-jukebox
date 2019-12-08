@@ -20,3 +20,11 @@ pipenv shell
 # Install project dependencies
 pipenv update
 ```
+
+
+## Synchronizing to Raspberry Pi
+
+```
+rsync -aPv ~/dev/music-album-loader/ pi@framboos:/tmp/music-album-loader --exclude '.*' --exclude Pipfile.lock
+```
+

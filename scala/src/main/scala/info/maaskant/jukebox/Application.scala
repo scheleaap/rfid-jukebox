@@ -17,7 +17,6 @@ object Application extends TaskApp with StrictLogging {
   val resetGpio = 25
 
   override def run(args: List[String]): Task[ExitCode] = {
-    import Card.cardUidEq
 
     //    val cardReader = Mfrc522CardReader.resource(controller, chipSelect, resetGpio)
     val cardReader = FakeCardReader.resource()
@@ -25,7 +24,7 @@ object Application extends TaskApp with StrictLogging {
     Observable.fromResource(cardReader)
       .flatMap { rfid =>
         Observable
-          .repeatEvalF(Task(rfid.read()))
+          .repeatEvalF(rfid.read())
           .delayOnNext(500.milliseconds)
       }
       .filter(_.isDefined)

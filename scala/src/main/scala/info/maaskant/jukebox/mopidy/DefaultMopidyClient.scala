@@ -8,23 +8,22 @@ import sttp.client._
 import sttp.client.playJson._
 import sttp.model.Uri
 
-class DefaultMopidyClient[F[_]] private(rpcEndpoint: Uri)(implicit F: Sync[F]) extends MopidyClient[F] with StrictLogging {
-  //  private implicit val backend = HttpURLConnectionBackend()
-  private implicit val sttpBackend: SttpBackend[F, Nothing, NothingT] = ???
+class DefaultMopidyClient[F[_]] private(rpcEndpoint: Uri)(implicit F: Sync[F], sttpBackend: SttpBackend[F, Nothing, NothingT])
+  extends MopidyClient[F] with StrictLogging {
 
   override def addToTracklist(uris: Seq[String]): F[Boolean] = {
-    import cats.syntax.functor._
     val json: JsObject = tracklistAddWrites.writes(TracklistAdd(uris))
-    for {
-      _ <- basicRequest
-        .post(rpcEndpoint)
-        .body(json)
-        .send()
-    } yield true
+
+    import cats.syntax.functor._
+    basicRequest
+      .post(rpcEndpoint)
+      .body(json)
+      .send()
+      .map(_.code.isSuccess)
   }
 }
 
 object DefaultMopidyClient extends StrictLogging {
-  def apply[F[_] : Sync](rpcEndpoint: Uri): DefaultMopidyClient[F] =
+  def apply[F[_]](rpcEndpoint: Uri)(implicit F: Sync[F], sttpBackend: SttpBackend[F, Nothing, NothingT]): DefaultMopidyClient[F] =
     new DefaultMopidyClient[F](rpcEndpoint)
 }

@@ -35,13 +35,12 @@ object Mfrc522CardReader extends StrictLogging {
 
   def resource[F[_]](controller: Int, chipSelect: Int, resetGpio: Int)(implicit F: Sync[F]): Resource[F, Mfrc522CardReader[F]] = {
     import cats.syntax.flatMap._
-    import cats.syntax.functor._
-    Resource.make(for {
-      _ <- F.delay(logger.debug("Opening RFID reader"))
-      reader <- Mfrc522CardReader(controller, chipSelect, resetGpio)
-    } yield reader)(rfid => for {
-      _ <- F.delay(logger.debug("Closing RFID reader"))
-      _ <- rfid.close()
-    } yield ())
+    Resource.make(
+      F.delay(logger.debug("Opening RFID reader")) >>
+        Mfrc522CardReader(controller, chipSelect, resetGpio)
+    )(rfid =>
+      F.delay(logger.debug("Closing RFID reader")) >>
+        rfid.close()
+    )
   }
 }

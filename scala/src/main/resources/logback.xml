@@ -11,4 +11,6 @@
 
     <logger name="info.maaskant" level="debug"/>
     <logger name="org.pmw.tinylog" level="info"/> <!-- MFRC522 log messages -->
+    <logger name="io.netty" level="info"/>
+    <logger name="org.asynchttpclient.netty" level="info"/>
 </configuration>

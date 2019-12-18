@@ -1,4 +1,4 @@
-package info.maaskant.jukebox
+package info.maaskant.jukebox.rfid
 
 object ByteUtils {
   // Source: https://alvinalexander.com/source-code/scala-how-to-convert-array-bytes-to-hex-string

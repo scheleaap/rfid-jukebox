@@ -1,4 +1,4 @@
-package info.maaskant.jukebox
+package info.maaskant.jukebox.rfid
 
 import cats.effect.{Resource, Sync}
 import com.diozero.devices.MFRC522

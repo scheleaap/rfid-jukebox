@@ -1,7 +1,7 @@
-package info.maaskant.jukebox
+package info.maaskant.jukebox.rfid
 
 import cats.Eq
-import info.maaskant.jukebox.ByteUtils.convertBytesToHex
+import ByteUtils.convertBytesToHex
 
 case class Uid(value: String) extends AnyVal // Value class
 

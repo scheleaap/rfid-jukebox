@@ -2,6 +2,7 @@ package info.maaskant.jukebox
 
 import cats.effect.ExitCode
 import com.typesafe.scalalogging.StrictLogging
+import info.maaskant.jukebox.rfid.{Card, FakeCardReader, Uid}
 import monix.eval.{Task, TaskApp}
 import monix.reactive.Observable
 import sttp.client._

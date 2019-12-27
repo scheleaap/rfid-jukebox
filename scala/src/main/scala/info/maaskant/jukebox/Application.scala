@@ -33,8 +33,7 @@ object Application extends TaskApp with StrictLogging {
           .repeatEvalF(rfid.read())
           .delayOnNext(500.milliseconds)
       }
-      .filter(_.isDefined)
-      .map(_.get) // Never fails
+      .flatMap(_.map(Observable.pure).getOrElse(Observable.empty))
       // .dump("card")
       .distinctUntilChanged
       .dump("distinct")
@@ -51,3 +50,32 @@ object Application extends TaskApp with StrictLogging {
     // curl -d '{"jsonrpc": "2.0", "id": 1, "method": "core.playback.play"}' -H 'Content-Type: application/json' http://framboos:6680/mopidy/rpc
   }
 }
+
+/**
+ * s0: stopped
+ * s1: playing(current album)
+ * s2: paused(last album)
+ *
+ * s0 -> s1 emits Play(album)
+ * s1 -> s2 emits Pause
+ * s2 -> s1 emits Resume
+ * s1 -> s0 emits Stop
+ * s2 -> s0 emits Stop
+ */
+
+//object StateMachine {
+//
+//}
+//sealed trait PlayState {
+//
+//  case object Stopped extends State
+//
+//  case class Playing(currentUri: SpotifyUri) extends State
+//
+//}
+//
+//sealed trait Event {
+//
+//  case class Play(uri: SpotifyUri) extends Event
+//
+//}

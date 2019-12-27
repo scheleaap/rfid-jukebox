@@ -16,47 +16,47 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   )
 
   "Stopped, nothing" should "Stopped, None" in {
-    StateMachine.nextCard(Stopped, None) should be(Stopped, None)
+    Stopped(None) should be(Stopped, None)
   }
 
   "Stopped, known card" should "Playing, Play" in {
-    StateMachine.nextCard(Stopped, card(card1)) should be(Playing(card1), play(card1))
+    Stopped(card(card1)) should be(Playing(card1), play(card1))
   }
 
   "Stopped, unknown card" should "Stopped, None" in {
-    StateMachine.nextCard(Stopped, card(unknownCard)) should be(Stopped, None)
+    Stopped(card(unknownCard)) should be(Stopped, None)
   }
 
   "Playing, nothing" should "Paused, Pause" in {
-    StateMachine.nextCard(Playing(card1), None) should be(Paused(card1), pause)
+    Playing(card1)(None) should be(Paused(card1), pause)
   }
 
   "Playing, same card" should "Playing, None" in {
-    StateMachine.nextCard(Playing(card1), card(card1)) should be(Playing(card1), None)
+    Playing(card1)(card(card1)) should be(Playing(card1), None)
   }
 
   "Playing, different card" should "Playing, Play" in {
-    StateMachine.nextCard(Playing(card1), card(card2)) should be(Playing(card2), play(card2))
+    Playing(card1)(card(card2)) should be(Playing(card2), play(card2))
   }
 
   "Playing, unknown card" should "Playing, None" in {
-    StateMachine.nextCard(Playing(card1), card(unknownCard)) should be(Playing(card1), None)
+    Playing(card1)(card(unknownCard)) should be(Playing(card1), None)
   }
 
   "Paused, nothing" should "Paused, None" in {
-    StateMachine.nextCard(Paused(card1), None) should be(Paused(card1), None)
+    Paused(card1)(None) should be(Paused(card1), None)
   }
 
   "Paused, same card" should "Playing, Resume" in {
-    StateMachine.nextCard(Paused(card1), card(card1)) should be(Playing(card1), resume)
+    Paused(card1)(card(card1)) should be(Playing(card1), resume)
   }
 
   "Paused, different card" should "Playing, Play" in {
-    StateMachine.nextCard(Paused(card1), card(card2)) should be(Playing(card2), play(card2))
+    Paused(card1)(card(card2)) should be(Playing(card2), play(card2))
   }
 
   "Paused, unknown card" should "Paused, None" in {
-    StateMachine.nextCard(Paused(card1), card(unknownCard)) should be(Paused(card1), None)
+    Paused(card1)(card(unknownCard)) should be(Paused(card1), None)
   }
 
   private def card(uid: Uid): Option[Card] = Some(Card(uid, "test"))

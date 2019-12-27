@@ -7,7 +7,7 @@ import info.maaskant.jukebox.Card.Album
 sealed trait Card
 
 object Card {
-  implicit val cardEq: Eq[Card] = (x: Card, y: Card) => ??? // x == y
+  implicit val eq: Eq[Card] = (x: Card, y: Card) => x == y
 
   case object None extends Card
 

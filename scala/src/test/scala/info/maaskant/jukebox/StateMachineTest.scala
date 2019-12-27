@@ -7,15 +7,15 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class StateMachineTest extends AnyFlatSpec with Matchers {
-  private val card1 = Album(SpotifyUri("card1"))
-  private val card2 = Album(SpotifyUri("card2"))
+  private val album1 = Album(SpotifyUri("album1"))
+  private val album2 = Album(SpotifyUri("album2"))
 
   "Stopped, nothing" should "Stopped, None" in {
     Stopped(Card.None) should be(Stopped, None)
   }
 
   "Stopped, album" should "Playing, Play" in {
-    Stopped(card1) should be(playing(card1), play(card1))
+    Stopped(album1) should be(playing(album1), play(album1))
   }
 
   "Stopped, unknown card" should "Stopped, None" in {
@@ -27,43 +27,43 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   }
 
   "Playing, nothing" should "Paused, Pause" in {
-    playing(card1)(Card.None) should be(paused(card1), pause)
+    playing(album1)(Card.None) should be(paused(album1), pause)
   }
 
   "Playing, same card" should "Playing, None" in {
-    playing(card1)(card1) should be(playing(card1), None)
+    playing(album1)(album1) should be(playing(album1), None)
   }
 
   "Playing, different card" should "Playing, Play" in {
-    playing(card1)(card2) should be(playing(card2), play(card2))
+    playing(album1)(album2) should be(playing(album2), play(album2))
   }
 
   "Playing, unknown card" should "Playing, None" in {
-    playing(card1)(Card.Unknown) should be(playing(card1), None)
+    playing(album1)(Card.Unknown) should be(playing(album1), None)
   }
 
   "Playing, stop" should "Stopped, Stop" in {
-    playing(card1)(Card.Stop) should be(Stopped, stop)
+    playing(album1)(Card.Stop) should be(Stopped, stop)
   }
 
   "Paused, nothing" should "Paused, None" in {
-    paused(card1)(Card.None) should be(paused(card1), None)
+    paused(album1)(Card.None) should be(paused(album1), None)
   }
 
   "Paused, same card" should "Playing, Resume" in {
-    paused(card1)(card1) should be(playing(card1), resume)
+    paused(album1)(album1) should be(playing(album1), resume)
   }
 
   "Paused, different card" should "Playing, Play" in {
-    paused(card1)(card2) should be(playing(card2), play(card2))
+    paused(album1)(album2) should be(playing(album2), play(album2))
   }
 
   "Paused, unknown card" should "Paused, None" in {
-    paused(card1)(Card.Unknown) should be(paused(card1), None)
+    paused(album1)(Card.Unknown) should be(paused(album1), None)
   }
 
   "Paused, stop" should "Stopped, Stop" in {
-    paused(card1)(Card.Stop) should be(Stopped, stop)
+    paused(album1)(Card.Stop) should be(Stopped, stop)
   }
 
   private def pause: Some[Action.Pause.type] = Some(Pause)

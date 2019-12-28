@@ -22,15 +22,29 @@ class DefaultMopidyClient[F[_]] private(rpcEndpoint: Uri)(implicit F: Sync[F], s
       .map(_ => ())
   }
 
-  override def clearTracklist(): F[Unit] = ???
+  override def clearTracklist(): F[Unit] = F.delay {
+    logger.debug("Clearing tracklist")
+  }
 
-  override def pausePlayback(): F[Unit] = ???
+  override def pausePlayback(): F[Unit] = F.delay {
+    logger.debug("Pausing playback")
+  }
 
-  override def resumePlayback(): F[Unit] = ???
 
-  override def startPlayback(): F[Unit] = ???
+  override def resumePlayback(): F[Unit] = F.delay {
+    logger.debug("Resuming playback")
+  }
 
-  override def stopPlayback(): F[Unit] = ???
+
+  override def startPlayback(): F[Unit] = F.delay {
+    logger.debug("Starting playback")
+  }
+
+
+  override def stopPlayback(): F[Unit] = F.delay {
+    logger.debug("Stopping playback")
+  }
+
 }
 
 object DefaultMopidyClient extends StrictLogging {

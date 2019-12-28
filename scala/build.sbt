@@ -24,5 +24,6 @@ libraryDependencies ++= {
 }
 
 scalacOptions ++= Seq(
-  "-language:higherKinds"
+  "-deprecation",
+  "-language:higherKinds",
 )

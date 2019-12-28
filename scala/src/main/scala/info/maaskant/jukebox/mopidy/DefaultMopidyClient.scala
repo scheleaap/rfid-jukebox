@@ -1,9 +1,10 @@
 package info.maaskant.jukebox.mopidy
 
 import cats.effect.Sync
+import cats.syntax.flatMap._
+import cats.syntax.functor._
 import com.typesafe.scalalogging.StrictLogging
-import info.maaskant.jukebox.mopidy.JsonRpcWrites.tracklistAddWrites
-import play.api.libs.json.JsObject
+import info.maaskant.jukebox.mopidy.JsonRpcWrites._
 import sttp.client._
 import sttp.client.playJson._
 import sttp.model.Uri
@@ -11,39 +12,37 @@ import sttp.model.Uri
 class DefaultMopidyClient[F[_]] private(rpcEndpoint: Uri)(implicit F: Sync[F], sttpBackend: SttpBackend[F, Nothing, NothingT])
   extends MopidyClient[F] with StrictLogging {
 
-  override def addToTracklist(uris: Seq[String]): F[Unit] = {
-    val json: JsObject = tracklistAddWrites.writes(TracklistAdd(uris))
+  private def send[T: BodySerializer](body: T): F[Unit] =
 
-    import cats.syntax.functor._
     basicRequest
       .post(rpcEndpoint)
-      .body(json)
+      .body(body)
       .send()
       .map(_ => ())
-  }
 
-  override def clearTracklist(): F[Unit] = F.delay {
-    logger.debug("Clearing tracklist")
-  }
+  override def addToTracklist(uris: Seq[String]): F[Unit] =
+    F.delay(logger.debug(s"Adding to tracklist: $uris")) >>
+      send(AddToTracklist(uris))
 
-  override def pausePlayback(): F[Unit] = F.delay {
-    logger.debug("Pausing playback")
-  }
+  override def clearTracklist(): F[Unit] =
+    F.delay(logger.debug("Clearing tracklist")) >>
+      send(ClearTracklist)
 
+  override def pausePlayback(): F[Unit] =
+    F.delay(logger.debug("Pausing playback")) >>
+      send(PausePlayback)
 
-  override def resumePlayback(): F[Unit] = F.delay {
-    logger.debug("Resuming playback")
-  }
+  override def resumePlayback(): F[Unit] =
+    F.delay(logger.debug("Resuming playback")) >>
+      send(ResumePlayback)
 
+  override def startPlayback(): F[Unit] =
+    F.delay(logger.debug("Starting playback")) >>
+      send(StartPlayback)
 
-  override def startPlayback(): F[Unit] = F.delay {
-    logger.debug("Starting playback")
-  }
-
-
-  override def stopPlayback(): F[Unit] = F.delay {
-    logger.debug("Stopping playback")
-  }
+  override def stopPlayback(): F[Unit] =
+    F.delay(logger.debug("Stopping playback")) >>
+      send(StopPlayback)
 
 }
 

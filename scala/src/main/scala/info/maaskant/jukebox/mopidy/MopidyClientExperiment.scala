@@ -1,13 +1,13 @@
 package info.maaskant.jukebox.mopidy
 
 import info.maaskant.jukebox.Card
-import info.maaskant.jukebox.mopidy.JsonRpcWrites.tracklistAddWrites
+import info.maaskant.jukebox.mopidy.JsonRpcWrites._
 import monix.eval.Task
 import sttp.client.{basicRequest, _}
 
 object MopidyClientExperiment extends App {
-  val b = TracklistAdd(Seq("spotify:track:4jNQkWhuzqrbqQuqanFFJ6"))
-  val s = tracklistAddWrites.writes(b).toString()
+  val b = AddToTracklist(Seq("spotify:track:4jNQkWhuzqrbqQuqanFFJ6"))
+  val s = addToTracklistWrites.writes(b).toString()
   println(s)
 
   private def callMopidy(card: Card): Task[Unit] = Task {

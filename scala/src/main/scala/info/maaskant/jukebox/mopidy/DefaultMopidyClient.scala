@@ -11,7 +11,7 @@ import sttp.model.Uri
 class DefaultMopidyClient[F[_]] private(rpcEndpoint: Uri)(implicit F: Sync[F], sttpBackend: SttpBackend[F, Nothing, NothingT])
   extends MopidyClient[F] with StrictLogging {
 
-  override def addToTracklist(uris: Seq[String]): F[Boolean] = {
+  override def addToTracklist(uris: Seq[String]): F[Unit] = {
     val json: JsObject = tracklistAddWrites.writes(TracklistAdd(uris))
 
     import cats.syntax.functor._
@@ -19,8 +19,18 @@ class DefaultMopidyClient[F[_]] private(rpcEndpoint: Uri)(implicit F: Sync[F], s
       .post(rpcEndpoint)
       .body(json)
       .send()
-      .map(_.code.isSuccess)
+      .map(_ => ())
   }
+
+  override def clearTracklist(): F[Unit] = ???
+
+  override def pausePlayback(): F[Unit] = ???
+
+  override def resumePlayback(): F[Unit] = ???
+
+  override def startPlayback(): F[Unit] = ???
+
+  override def stopPlayback(): F[Unit] = ???
 }
 
 object DefaultMopidyClient extends StrictLogging {

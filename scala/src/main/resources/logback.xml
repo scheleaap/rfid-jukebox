@@ -5,11 +5,11 @@
         </encoder>
     </appender>
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="console"/>
     </root>
 
-    <logger name="info.maaskant" level="debug"/>
+    <logger name="info.maaskant" level="info"/>
     <logger name="org.pmw.tinylog" level="info"/> <!-- MFRC522 log messages -->
     <logger name="io.netty" level="info"/>
     <logger name="org.asynchttpclient.netty" level="info"/>

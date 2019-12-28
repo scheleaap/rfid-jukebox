@@ -1,13 +1,12 @@
 package info.maaskant.jukebox
 
 import cats.effect.{ExitCode, Resource, Sync}
-import cats.syntax.flatMap._
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Actions.executeAction
 import info.maaskant.jukebox.Card.{Album, Stop}
 import info.maaskant.jukebox.State.Stopped
 import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyClient}
-import info.maaskant.jukebox.rfid.{CardReader, FakeCardReader, FixedUidReader, Uid}
+import info.maaskant.jukebox.rfid.{CardReader, Mfrc522CardReader, Uid}
 import monix.eval.{Task, TaskApp}
 import monix.reactive.Observable
 import sttp.client._
@@ -16,10 +15,6 @@ import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import scala.concurrent.duration._
 
 object Application extends TaskApp with StrictLogging {
-  logger.debug("DEBUG")
-  logger.info("INFO")
-  logger.warn("WARN")
-
   private val controller = 0
   private val chipSelect = 0
   private val resetGpio = 25
@@ -31,17 +26,17 @@ object Application extends TaskApp with StrictLogging {
   )
 
   private def createCardReaderResource = {
-    //    Mfrc522CardReader.resource(controller, chipSelect, resetGpio)
+    Mfrc522CardReader.resource(controller, chipSelect, resetGpio)
     //    FakeCardReader.resource(new TimeBasedReader())
-    FakeCardReader.resource(new FixedUidReader(IndexedSeq(
-      //      None,
-      Some(Uid("ebd1a421")),
-      Some(Uid("ebd1a421")),
-      Some(Uid("ebd1a421")),
-      Some(Uid("album2")),
-      Some(Uid("album2")),
-      Some(Uid("TODO-STOP")),
-    )))
+    //    FakeCardReader.resource(new FixedUidReader(IndexedSeq(
+    //      None,
+    //      Some(Uid("ebd1a421")),
+    //      Some(Uid("ebd1a421")),
+    //      Some(Uid("ebd1a421")),
+    //      Some(Uid("album2")),
+    //      Some(Uid("album2")),
+    //      Some(Uid("TODO-STOP")),
+    //    )))
   }
 
   override def run(args: List[String]): Task[ExitCode] = {
@@ -59,16 +54,17 @@ object Application extends TaskApp with StrictLogging {
         //.dump("physical")
         .map(physicalCardToLogicalCard)
         .distinctUntilChanged
-        .doOnNext(i => Task(logger.debug(s"Logical card: $i")))
+        .doOnNext(i => Task(logger.info(s"Logical card: $i")))
         //.dump("logical")
         .scanEval[State](Task.pure(Stopped)) { (s0, card) =>
           updateStateAndExecuteAction(s0, card)(mopidyClient)
         }
         //.dump("state")
-        .foldWhileLeftL(())((_, state) => state match {
-          case Stopped => Right(())
-          case _ => Left(())
-        })
+        //.foldWhileLeftL(())((_, state) => state match {
+        //  case Stopped => Right(())
+        //  case _ => Left(())
+        //})
+        .countL
         .map(_ => ExitCode.Success)
     }
   }

@@ -1,4 +1,4 @@
-name := "jukebox"
+name := "rfid-jukebox"
 
 scalaVersion := "2.13.1"
 
@@ -27,3 +27,18 @@ scalacOptions ++= Seq(
   "-deprecation",
   "-language:higherKinds",
 )
+
+// Packaging
+enablePlugins(JavaServerAppPackaging)
+enablePlugins(SystemdPlugin)
+enablePlugins(DebianPlugin)
+
+version := "1.0"
+
+maintainer := "scheleaap"
+
+packageSummary := "An RFID-based jukebox client for Mopidy with Spotify"
+
+packageDescription := "An RFID-based jukebox client for Mopidy with Spotify"
+
+debianPackageDependencies := Seq("java8-runtime-headless")

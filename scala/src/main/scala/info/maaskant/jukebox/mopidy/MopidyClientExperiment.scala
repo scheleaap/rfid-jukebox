@@ -5,7 +5,7 @@ import info.maaskant.jukebox.mopidy.JsonRpcWrites._
 import monix.eval.Task
 import sttp.client.{basicRequest, _}
 
-object MopidyClientExperiment extends App {
+object MopidyClientExperiment {
   val b = AddToTracklist(Seq("spotify:track:4jNQkWhuzqrbqQuqanFFJ6"))
   val s = addToTracklistWrites.writes(b).toString()
   println(s)

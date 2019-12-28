@@ -26,7 +26,7 @@ sealed trait State {
 object State {
 
   case object Stopped extends State {
-    def apply(input: Card): (State, Option[Action]) = input match {
+    override def apply(input: Card): (State, Option[Action]) = input match {
       case Card.None => this -> None
       case Card.Unknown => this -> None
       case Card.Stop => this -> None

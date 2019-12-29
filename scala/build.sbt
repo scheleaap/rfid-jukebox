@@ -29,9 +29,11 @@ scalacOptions ++= Seq(
 )
 
 // Packaging
-enablePlugins(JavaServerAppPackaging)
-enablePlugins(SystemdPlugin)
-enablePlugins(DebianPlugin)
+enablePlugins(
+  JavaServerAppPackaging,
+  SystemdPlugin,
+  DebianPlugin
+)
 
 version := "1.0"
 
@@ -41,4 +43,6 @@ packageSummary := "An RFID-based jukebox client for Mopidy with Spotify"
 
 packageDescription := "An RFID-based jukebox client for Mopidy with Spotify"
 
-debianPackageDependencies := Seq("java8-runtime-headless")
+debianPackageDependencies in Debian := Seq("java8-runtime-headless")
+
+daemonGroup in Linux := "gpio"

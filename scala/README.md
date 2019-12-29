@@ -8,7 +8,7 @@ https://github.com/mattjlewis/diozero/blob/master/diozero-sampleapps/src/main/ja
 
 ## Installation
 
-To install on Raspberry Pi:
+To install Java on Raspberry Pi:
 ```shell script
 # Java
 # Source: https://joshefin.xyz/install-java-11-on-a-raspberry-pi/

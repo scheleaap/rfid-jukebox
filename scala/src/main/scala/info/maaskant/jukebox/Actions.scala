@@ -34,7 +34,7 @@ object Actions extends StrictLogging {
       mopidyClient.addToTracklist(Seq(uri.value)) >>
       mopidyClient.startPlayback()
 
-  private def executeStop[F[_] : Sync](implicit mopidyClient: MopidyClient[F]): F[Unit] = {
-    mopidyClient.stopPlayback()
-  }
+  private def executeStop[F[_] : Sync](implicit mopidyClient: MopidyClient[F]): F[Unit] =
+    mopidyClient.stopPlayback() >>
+      mopidyClient.clearTracklist()
 }

@@ -11,7 +11,7 @@ libraryDependencies ++= {
     "com.softwaremill.sttp.client" %% "core" % sttpClient,
     "com.softwaremill.sttp.client" %% "play-json" % sttpClient,
     "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % sttpClient, // TODO Replace with httpclient-backend below once it contains Monix support
-    //    "com.softwaremill.sttp.client" %% "httpclient-backend" % sttpClient,
+    //"com.softwaremill.sttp.client" %% "httpclient-backend" % sttpClient,
     "io.monix" %% "monix" % "3.1.0",
 
     // Logging
@@ -37,12 +37,10 @@ enablePlugins(
 
 version := "1.0"
 
-maintainer := "scheleaap"
+maintainer in Linux := "scheleaap"
 
-packageSummary := "An RFID-based jukebox client for Mopidy with Spotify"
+packageSummary in Linux := "An RFID-based jukebox client for Mopidy with Spotify"
 
 packageDescription := "An RFID-based jukebox client for Mopidy with Spotify"
 
-debianPackageDependencies in Debian := Seq("java8-runtime-headless")
-
-daemonGroup in Linux := "gpio"
+debianPackageDependencies in Debian := Seq("openjdk-8-jre-headless")

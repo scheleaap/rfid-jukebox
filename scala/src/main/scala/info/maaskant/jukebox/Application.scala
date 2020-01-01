@@ -20,9 +20,10 @@ object Application extends TaskApp with StrictLogging {
   private val resetGpio = 25
 
   private val cardMapping: Map[Uid, Card] = Map(
-    Uid("ebd1a421") -> Album(SpotifyUri("spotify:album:7Eoz7hJvaX1eFkbpQxC5PA")),
-    Uid("album2") -> Album(SpotifyUri("spotify:album:album2")),
-    Uid("TODO-STOP") -> Stop,
+    Uid("ebd1a421") -> Stop,
+    Uid("042abc4a325e81") -> Album(SpotifyUri("spotify:album:2WT1pbYjLJciAR26yMebkH")), // The Dark Side Of The Moon
+    Uid("0426bc4a325e81") -> Album(SpotifyUri("spotify:album:02Ast9sM8awNiA2ViVjO4Q")), // Nightfall in Middle Earth
+    Uid("042ebc4a325e81") -> Album(SpotifyUri("spotify:album:1YaUAkNsLKXtJfb0FVZcyu")), // New York - Addis - London
   )
 
   private def createCardReaderResource = {
@@ -42,7 +43,7 @@ object Application extends TaskApp with StrictLogging {
   override def run(args: List[String]): Task[ExitCode] = {
     val resources: Resource[Task, (DefaultMopidyClient[Task], CardReader[Task])] = for {
       sttpBackend <- AsyncHttpClientMonixBackend.resource()
-      mopidyClient = DefaultMopidyClient(uri"http://localhost:6680/mopidy/rpc")(F = implicitly[Sync[Task]], sttpBackend = sttpBackend)
+      mopidyClient = DefaultMopidyClient(uri"http://framboos:6680/mopidy/rpc")(F = implicitly[Sync[Task]], sttpBackend = sttpBackend)
       cardReader <- createCardReaderResource
     } yield (mopidyClient, cardReader)
 
@@ -66,7 +67,10 @@ object Application extends TaskApp with StrictLogging {
         //})
         .countL
         .map(_ => ExitCode.Success)
-    }
+    }.onErrorHandleWith(t => Task {
+      logger.error("Fatal error", t)
+      ExitCode.Error
+    })
   }
 
   private def physicalCardToLogicalCard(pco: Option[rfid.Card]): Card = pco.map(pc =>

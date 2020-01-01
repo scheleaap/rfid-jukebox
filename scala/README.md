@@ -1,4 +1,4 @@
-# Jukebox
+# RFID Jukebox
 
 ## Documentation
 
@@ -8,7 +8,9 @@ https://github.com/mattjlewis/diozero/blob/master/diozero-sampleapps/src/main/ja
 
 ## Installation
 
-To install Java on Raspberry Pi:
+The jukebox requires Java 8+ to run.
+
+To install Java 11 on Raspberry Pi (not required):
 ```shell script
 # Java
 # Source: https://joshefin.xyz/install-java-11-on-a-raspberry-pi/

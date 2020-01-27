@@ -1,0 +1,42 @@
+${{header}}
+${{control-functions}}
+
+# Add a user to a group
+# $1 = user
+# $2 = group
+addUserToGroup() {
+    user="$1"
+    if [ -z "$user" ]; then
+        echo "usage: addUserToGroup user group"
+        exit 1
+    fi
+    group="$2"
+    if [ -z "$group" ]; then
+        echo "usage: addUserToGroup user group"
+        exit 1
+    fi
+    if getent group | grep -q "^$group:" ;
+    then
+        echo "Adding user $user to group $group"
+        usermod -a -G $group $user
+    else
+        echo "ERROR: Expected group $group does not exist"
+        exit 1
+    fi
+}
+
+
+addGroup ${{daemon_group}} "${{daemon_group_gid}}"
+addUser ${{daemon_user}} "${{daemon_user_uid}}" ${{daemon_group}} "${{app_name}} daemon-user" "${{daemon_shell}}"
+addUserToGroup ${{daemon_user}} gpio
+addUserToGroup ${{daemon_user}} spi
+
+${{chown-paths}}
+
+# For some reason, the a systemd script is appended to this file.
+# See https://github.com/sbt/sbt-native-packager/issues/952
+exit 0
+# ----- END OF SCRIPT, IGNORE THE FOLLOWING -----
+
+
+

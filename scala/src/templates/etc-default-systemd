@@ -1,0 +1,11 @@
+# #####################################
+# ##### Environment Configuration #####
+# #####################################
+#
+# This file is parsed by systemd. You can modify it to specify environment
+# variables for the application.
+#
+# For a description of the format, see: `man systemd.exec`, section
+# `EnvironmentFile`.
+
+SERVICE_LOG_LEVEL=debug

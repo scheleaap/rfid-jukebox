@@ -39,11 +39,12 @@ object State {
       case Card.None => Paused(currentUri) -> Some(Pause)
       case Card.Stop => Stopped -> Some(Action.Stop)
       case Card.Unknown => this -> None
-      case Album(newUri) => if (currentUri == newUri) {
-        this -> None
-      } else {
-        Playing(newUri) -> Some(Play(newUri))
-      }
+      case Album(newUri) =>
+        if (currentUri == newUri) {
+          this -> None
+        } else {
+          Playing(newUri) -> Some(Play(newUri))
+        }
     }
   }
 
@@ -52,11 +53,12 @@ object State {
       case Card.None => (Paused(lastUri), None)
       case Card.Stop => Stopped -> Some(Action.Stop)
       case Card.Unknown => this -> None
-      case Album(newUri) => if (lastUri == newUri) {
-        Playing(newUri) -> Some(Resume)
-      } else {
-        Playing(newUri) -> Some(Play(newUri))
-      }
+      case Album(newUri) =>
+        if (lastUri == newUri) {
+          Playing(newUri) -> Some(Resume)
+        } else {
+          Playing(newUri) -> Some(Play(newUri))
+        }
     }
   }
 

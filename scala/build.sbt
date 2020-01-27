@@ -7,7 +7,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 libraryDependencies ++= {
   val sttpClient = "2.0.0-RC5"
   Seq(
-    "com.diozero" % "diozero-core" % "0.11" exclude("org.tinylog", "tinylog"),
+    "com.diozero" % "diozero-core" % "0.11" exclude ("org.tinylog", "tinylog"),
     "com.softwaremill.sttp.client" %% "core" % sttpClient,
     "com.softwaremill.sttp.client" %% "play-json" % sttpClient,
     "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % sttpClient, // TODO Replace with httpclient-backend below once it contains Monix support

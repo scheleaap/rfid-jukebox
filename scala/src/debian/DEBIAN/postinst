@@ -33,7 +33,7 @@ addUserToGroup ${{daemon_user}} spi
 
 ${{chown-paths}}
 
-# For some reason, the a systemd script is appended to this file.
+# For some reason, a systemd script is appended to this file.
 # See https://github.com/sbt/sbt-native-packager/issues/952
 exit 0
 # ----- END OF SCRIPT, IGNORE THE FOLLOWING -----

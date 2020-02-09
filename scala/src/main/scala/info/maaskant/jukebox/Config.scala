@@ -4,13 +4,26 @@ import java.net.URI
 
 import cats.effect.Sync
 import cats.syntax.flatMap._
+import info.maaskant.jukebox.mopidy.MopidyUri
+import info.maaskant.jukebox.rfid.Uid
+import pureconfig.ConvertHelpers._
+import pureconfig.configurable._
 import pureconfig.error.ConfigReaderFailures
 import pureconfig.generic.auto._
+import pureconfig.generic.semiauto._
 import pureconfig.{ConfigReader, ConfigSource, _}
 
 import scala.concurrent.duration.FiniteDuration
 
 object Config {
+  private implicit val commandConvert: ConfigReader[Command] = deriveEnumerationReader[Command]
+
+  private implicit val albumMapReader: ConfigReader[Map[Uid, MopidyUri]] =
+    genericMapReader[Uid, MopidyUri](catchReadError(Uid.apply))
+
+  private implicit val commandMapReader: ConfigReader[Map[Uid, Command]] =
+    genericMapReader[Uid, Command](catchReadError(Uid.apply))
+
   private def load(): ConfigReader.Result[Config] = {
     val devFile = ConfigSource.file("/home/wout/dev/music-album-loader/scala/etc.conf").optional
     val etcFile = ConfigSource.file("/etc/rfid-jukebox.conf").optional
@@ -41,7 +54,9 @@ object Config {
 case class Config(
     mopidy: Mopidy,
     spi: Spi,
-    readInterval: FiniteDuration
+    readInterval: FiniteDuration,
+    albums: Map[Uid, MopidyUri],
+    commands: Map[Uid, Command]
 )
 
 case class Mopidy(
@@ -53,3 +68,9 @@ case class Spi(
     chipSelect: Int,
     resetGpio: Int
 )
+
+sealed trait Command
+
+object Command {
+  case object Stop extends Command
+}

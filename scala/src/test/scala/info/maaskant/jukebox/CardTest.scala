@@ -1,11 +1,12 @@
 package info.maaskant.jukebox
 
+import info.maaskant.jukebox.mopidy.MopidyUri
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class CardTest extends AnyFlatSpec with Matchers {
-  private val album1 = Card.Album(SpotifyUri("a"))
-  private val album2 = Card.Album(SpotifyUri("b"))
+  private val album1 = Card.Album(MopidyUri("a"))
+  private val album2 = Card.Album(MopidyUri("b"))
 
   "eq" should "work correctly" in {
     Card.eq.eqv(Card.None, Card.None) shouldBe true

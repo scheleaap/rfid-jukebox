@@ -3,9 +3,9 @@ package info.maaskant.jukebox
 import cats.effect.{ExitCode, Resource, Sync}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Actions.executeAction
-import info.maaskant.jukebox.Card.{Album, Stop}
+import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.State.Stopped
-import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyClient}
+import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyClient, MopidyUri}
 import info.maaskant.jukebox.rfid.{CardReader, Mfrc522CardReader, Uid}
 import monix.eval.{Task, TaskApp}
 import monix.reactive.Observable
@@ -13,30 +13,26 @@ import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.model.Uri
 
 object Application extends TaskApp with StrictLogging {
-  private val controller = 0
-  private val chipSelect = 0
-  private val resetGpio = 25
+  private def createCardMapping(albums: Map[Uid, MopidyUri], commands: Map[Uid, Command]): Map[Uid, Card] =
+    albums.map { case (uid, uri) => (uid, Album(uri)) } ++
+      commands.map { case (uid, Command.Stop) => (uid, Card.Stop) }
 
-  private val cardMapping: Map[Uid, Card] = Map(
-    Uid("ebd1a421") -> Stop,
-    Uid("042abc4a325e81") -> Album(SpotifyUri("spotify:album:2WT1pbYjLJciAR26yMebkH")), // The Dark Side Of The Moon
-    Uid("0426bc4a325e81") -> Album(SpotifyUri("spotify:album:02Ast9sM8awNiA2ViVjO4Q")), // Nightfall in Middle Earth
-    Uid("042ebc4a325e81") -> Album(SpotifyUri("spotify:album:1YaUAkNsLKXtJfb0FVZcyu")), // New York - Addis - London
-    Uid("TODO") -> Album(SpotifyUri("spotify:playlist:7klfbs5nEXp6KiVHcHcZXz")) // Feestselectie
-  )
-
-  private def createCardReaderResource = {
-    Mfrc522CardReader.resource(controller, chipSelect, resetGpio)
+  private def createCardReaderResource(config: Spi) = {
+    Mfrc522CardReader.resource(config.controller, config.chipSelect, config.resetGpio)
     //    FakeCardReader.resource(new TimeBasedReader())
-    //    FakeCardReader.resource(new FixedUidReader(IndexedSeq(
-    //      None,
-    //      Some(Uid("ebd1a421")),
-    //      Some(Uid("ebd1a421")),
-    //      Some(Uid("ebd1a421")),
-    //      Some(Uid("album2")),
-    //      Some(Uid("album2")),
-    //      Some(Uid("TODO-STOP")),
-    //    )))
+//    FakeCardReader.resource(
+//      new FixedUidReader(
+//        IndexedSeq(
+//          None,
+//          Some(Uid("ebd1a421")),
+//          Some(Uid("ebd1a421")),
+//          Some(Uid("ebd1a421")),
+//          Some(Uid("042abc4a325e81")),
+//          Some(Uid("042ebc4a325e81")),
+//          Some(Uid("TODO"))
+//        )
+//      )
+//    )
   }
 
   override def run(args: List[String]): Task[ExitCode] =
@@ -55,13 +51,15 @@ object Application extends TaskApp with StrictLogging {
       config: Config,
       mopidyClient: MopidyClient[Task],
       cardReader: CardReader[Task]
-  ): Task[Long] =
+  ): Task[Long] = {
+    val cardMapping: Map[Uid, Card] = createCardMapping(config.albums, config.commands)
+
     Observable
       .repeatEvalF(cardReader.read())
       .delayOnNext(config.readInterval)
       .distinctUntilChanged
       //.dump("physical")
-      .map(physicalCardToLogicalCard)
+      .map(physicalCardToLogicalCard(_, cardMapping))
       .distinctUntilChanged
       .doOnNext(i => Task(logger.info(s"Logical card: $i")))
       //.dump("logical")
@@ -74,8 +72,9 @@ object Application extends TaskApp with StrictLogging {
       //  case _ => Left(())
       //})
       .countL
+  }
 
-  private def physicalCardToLogicalCard(pco: Option[rfid.Card]): Card =
+  private def physicalCardToLogicalCard(pco: Option[rfid.Card], cardMapping: Map[Uid, Card]): Card =
     pco
       .map(pc => cardMapping.getOrElse(pc.uid, Card.Unknown))
       .getOrElse(Card.None)
@@ -87,7 +86,7 @@ object Application extends TaskApp with StrictLogging {
         F = implicitly[Sync[Task]],
         sttpBackend = sttpBackend
       )
-      cardReader <- createCardReaderResource
+      cardReader <- createCardReaderResource(config.spi)
     } yield (mopidyClient, cardReader)
 
   private def updateStateAndExecuteAction(s0: State, card: Card)(

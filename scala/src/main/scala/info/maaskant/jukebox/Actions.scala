@@ -5,7 +5,7 @@ import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import com.typesafe.scalalogging.StrictLogging
-import info.maaskant.jukebox.mopidy.MopidyClient
+import info.maaskant.jukebox.mopidy.{MopidyClient, MopidyUri}
 
 import scala.util.control.NonFatal
 
@@ -30,7 +30,7 @@ object Actions extends StrictLogging {
   private def executePause[F[_]: Sync](implicit mopidyClient: MopidyClient[F]): F[Unit] =
     mopidyClient.pausePlayback()
 
-  private def executePlay[F[_]: Sync](uri: SpotifyUri)(implicit mopidyClient: MopidyClient[F]): F[Unit] =
+  private def executePlay[F[_]: Sync](uri: MopidyUri)(implicit mopidyClient: MopidyClient[F]): F[Unit] =
     mopidyClient.clearTracklist() >>
       mopidyClient.addToTracklist(Seq(uri.value)) >>
       mopidyClient.startPlayback()

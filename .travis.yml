@@ -2,3 +2,8 @@ git:
   depth: 1
 
 language: scala
+
+scala:
+  - "2.13.1"
+
+script: sbt ++$TRAVIS_SCALA_VERSION test:test debian:packageBin

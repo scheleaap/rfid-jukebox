@@ -6,4 +6,9 @@ language: scala
 scala:
   - "2.13.1"
 
+addons:
+  apt:
+    packages:
+      - fakeroot
+
 script: sbt ++$TRAVIS_SCALA_VERSION test:test debian:packageBin

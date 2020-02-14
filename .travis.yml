@@ -1,0 +1,4 @@
+git:
+  depth: 1
+
+language: scala

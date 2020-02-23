@@ -16,16 +16,30 @@ scala:
 
 jdk: openjdk11
 
-before_install:
-  - |
-    npm install -g semantic-release \
-    @semantic-release/changelog \
-    @semantic-release/commit-analyzer \
-    @semantic-release/exec \
-    @semantic-release/git \
-    @semantic-release/release-notes-generator
+#before_install:
+#  - |
+#    npm install -g semantic-release \
+#    @semantic-release/changelog \
+#    @semantic-release/commit-analyzer \
+#    @semantic-release/exec \
+#    @semantic-release/git \
+#    @semantic-release/release-notes-generator
 
-script: sbt ++$TRAVIS_SCALA_VERSION test:test debian:packageBin
+jobs:
+  include:
+    - stage: "Compile & Test"
+      script: sbt ++$TRAVIS_SCALA_VERSION test:test debian:packageBin
+    - stage: release
+      script: skip
+      deploy:
+        provider: script
+        skip_cleanup: true
+        script:
+          - nvm install lts/*
+          - npx semantic-release
+        on:
+          all_branches: true
 
-
-# See https://hodgkins.io/automating-semantic-versioning
+# See:
+# https://hodgkins.io/automating-semantic-versioning
+# https://semantic-release.gitbook.io/semantic-release/recipes/recipes/travis#non-node-js-projects-configuration

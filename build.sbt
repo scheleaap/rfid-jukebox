@@ -36,8 +36,6 @@ enablePlugins(
   DebianPlugin
 )
 
-version := "1.0"
-
 maintainer in Linux := "scheleaap"
 
 packageSummary in Linux := "An RFID-based jukebox client for Mopidy with Spotify"

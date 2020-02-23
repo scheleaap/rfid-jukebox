@@ -25,15 +25,14 @@ jdk: openjdk11
 #    @semantic-release/git \
 #    @semantic-release/release-notes-generator
 
-#    - stage: "Compile & Test"
-#      script: sbt ++$TRAVIS_SCALA_VERSION test:test debian:packageBin
 jobs:
   include:
+#    - stage: "Compile & Test"
+#      script: sbt ++$TRAVIS_SCALA_VERSION test:test debian:packageBin
     - stage: release
       script: skip
       deploy:
         provider: script
-        cl
         script: npx semantic-release
         on:
           branch: master

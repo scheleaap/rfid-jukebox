@@ -27,8 +27,8 @@ jdk: openjdk11
 
 jobs:
   include:
-    - stage: "Compile & Test"
-      script: sbt ++$TRAVIS_SCALA_VERSION test:test debian:packageBin
+#    - stage: "Compile & Test"
+#      script: sbt ++$TRAVIS_SCALA_VERSION test:test debian:packageBin
     - stage: release
       script: skip
       deploy:

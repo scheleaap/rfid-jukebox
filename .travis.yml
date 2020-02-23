@@ -17,6 +17,15 @@ scala:
 jdk: openjdk11
 
 before_install:
-  - npm install
+  - |
+    npm install -g semantic-release \
+    @semantic-release/changelog \
+    @semantic-release/commit-analyzer \
+    @semantic-release/exec \
+    @semantic-release/git \
+    @semantic-release/release-notes-generator
 
 script: sbt ++$TRAVIS_SCALA_VERSION test:test debian:packageBin
+
+
+# See https://hodgkins.io/automating-semantic-versioning

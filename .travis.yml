@@ -33,12 +33,10 @@ jobs:
       script: skip
       deploy:
         provider: script
-        skip_cleanup: true
-        script:
-          - nvm install lts/*
-          - npx semantic-release
+        cl
+        script: npx semantic-release
         on:
-          all_branches: true
+          branch: master
 
 # See:
 # https://hodgkins.io/automating-semantic-versioning

@@ -38,7 +38,7 @@ enablePlugins(
 
 maintainer in Linux := "scheleaap"
 
-packageSummary in Linux := "An RFID-based jukebox client for Mopidy with Spotify"
+packageSummary in Linux := "RFID Jukebox"
 
 packageDescription := "An RFID-based jukebox client for Mopidy with Spotify"
 

@@ -27,7 +27,7 @@ script:
 # https://hodgkins.io/automating-semantic-versioning
 # https://semantic-release.gitbook.io/semantic-release/recipes/recipes/travis#non-node-js-projects-configuration
 before_deploy:
-  - nvm install 8
+  - nvm install 12
   - |
     npm install -g semantic-release \
     @semantic-release/changelog \

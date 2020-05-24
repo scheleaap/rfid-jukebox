@@ -38,7 +38,7 @@ object Actions extends StrictLogging {
     mopidyClient.resumePlayback()
 
   private def executeShutdown[F[_]](implicit F: Sync[F]): F[Unit] = F.delay {
-    val command = "shutdown now"
+    val command = "sudo shutdown now"
     val exitCode = command.!
     if (exitCode != 0) {
       F.raiseError(new RuntimeException(s"$command returned exit code $exitCode"))

@@ -14,6 +14,8 @@ object Card {
 
   case class Album(spotifyUri: MopidyUri) extends Card
 
+  case object Shutdown extends Card
+
   case object Stop extends Card
 
 }

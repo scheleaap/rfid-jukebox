@@ -15,7 +15,13 @@ import sttp.model.Uri
 object Application extends TaskApp with StrictLogging {
   private def createCardMapping(albums: Map[Uid, MopidyUri], commands: Map[Uid, Command]): Map[Uid, Card] =
     albums.map { case (uid, uri) => (uid, Album(uri)) } ++
-      commands.map { case (uid, Command.Stop) => (uid, Card.Stop) }
+      commands.map {
+        case (uid, command) =>
+          (uid, command match {
+            case Command.Shutdown => Card.Shutdown
+            case Command.Stop => Card.Stop
+          })
+      }
 
   private def createCardReaderResource(config: Spi) = {
     Mfrc522CardReader.resource(config.controller, config.chipSelect, config.resetGpio)

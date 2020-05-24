@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.0...v1.1.1) (2020-05-24)
+
+
+### Bug Fixes
+
+* Shutdown computer with sudo ([043bac8](https://github.com/scheleaap/rfid-jukebox/commit/043bac8064b2dde60e2782e8f07eb7ed7b719a86))
+
 # [1.1.0](https://github.com/scheleaap/rfid-jukebox/compare/v1.0.1...v1.1.0) (2020-05-24)
 
 

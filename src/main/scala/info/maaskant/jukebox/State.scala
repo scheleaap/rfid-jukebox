@@ -14,6 +14,7 @@ object State {
     override def apply(input: Card): (State, Option[Action]) = input match {
       case Card.None => this -> None
       case Card.Unknown => this -> None
+      case Card.Shutdown => this -> Some(Action.Shutdown)
       case Card.Stop => this -> None
       case Album(spotifyUri) => Playing(spotifyUri) -> Some(Play(spotifyUri))
     }
@@ -22,6 +23,7 @@ object State {
   case class Playing(currentUri: MopidyUri) extends State {
     override def apply(input: Card): (State, Option[Action]) = input match {
       case Card.None => Paused(currentUri) -> Some(Pause)
+      case Card.Shutdown => this -> Some(Action.Shutdown)
       case Card.Stop => Stopped -> Some(Action.Stop)
       case Card.Unknown => this -> None
       case Album(newUri) =>
@@ -36,6 +38,7 @@ object State {
   case class Paused(lastUri: MopidyUri) extends State {
     override def apply(input: Card): (State, Option[Action]) = input match {
       case Card.None => (Paused(lastUri), None)
+      case Card.Shutdown => this -> Some(Action.Shutdown)
       case Card.Stop => Stopped -> Some(Action.Stop)
       case Card.Unknown => this -> None
       case Album(newUri) =>

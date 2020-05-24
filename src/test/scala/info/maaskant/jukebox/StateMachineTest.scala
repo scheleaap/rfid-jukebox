@@ -23,6 +23,10 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
     Stopped(Card.Unknown) should be(Stopped, None)
   }
 
+  "Stopped, shutdown" should "Stopped, Shutdown" in {
+    Stopped(Card.Shutdown) should be(Stopped, shutdown)
+  }
+
   "Stopped, stop" should "Stopped, None" in {
     Stopped(Card.Stop) should be(Stopped, None)
   }
@@ -41,6 +45,10 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
 
   "Playing, unknown card" should "Playing, None" in {
     playing(album1)(Card.Unknown) should be(playing(album1), None)
+  }
+
+  "Playing, shutdown" should "Playing, Shutdown" in {
+    playing(album1)(Card.Shutdown) should be(playing(album1), shutdown)
   }
 
   "Playing, stop" should "Stopped, Stop" in {
@@ -63,6 +71,10 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
     paused(album1)(Card.Unknown) should be(paused(album1), None)
   }
 
+  "Paused, shutdown" should "Paused, Shutdown" in {
+    paused(album1)(Card.Shutdown) should be(paused(album1), shutdown)
+  }
+
   "Paused, stop" should "Stopped, Stop" in {
     paused(album1)(Card.Stop) should be(Stopped, stop)
   }
@@ -76,6 +88,8 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   private def playing(album: Album): Playing = Playing(album.spotifyUri)
 
   private def resume: Some[Action.Resume.type] = Some(Resume)
+
+  private def shutdown: Some[Action.Shutdown.type] = Some(Action.Shutdown)
 
   private def stop: Some[Action.Stop.type] = Some(Action.Stop)
 }

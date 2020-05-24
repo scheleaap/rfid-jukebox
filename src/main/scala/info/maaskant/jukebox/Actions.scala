@@ -7,15 +7,17 @@ import cats.syntax.functor._
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.mopidy.{MopidyClient, MopidyUri}
 
+import scala.sys.process._
 import scala.util.control.NonFatal
 
 object Actions extends StrictLogging {
   def executeAction[F[_]: Sync](action: Action)(implicit mopidyClient: MopidyClient[F]): F[Boolean] =
     (action match {
-      case Action.Stop => executeStop
-      case Action.Play(uri) => executePlay(uri)
       case Action.Pause => executePause
+      case Action.Play(uri) => executePlay(uri)
       case Action.Resume => executeResume
+      case Action.Shutdown => executeShutdown
+      case Action.Stop => executeStop
     }).map(_ => true).recoverWith {
       case NonFatal(t) =>
         Sync[F].delay {
@@ -24,9 +26,6 @@ object Actions extends StrictLogging {
         }
     }
 
-  private def executeResume[F[_]: Sync](implicit mopidyClient: MopidyClient[F]) =
-    mopidyClient.resumePlayback()
-
   private def executePause[F[_]: Sync](implicit mopidyClient: MopidyClient[F]): F[Unit] =
     mopidyClient.pausePlayback()
 
@@ -34,6 +33,17 @@ object Actions extends StrictLogging {
     mopidyClient.clearTracklist() >>
       mopidyClient.addToTracklist(Seq(uri.value)) >>
       mopidyClient.startPlayback()
+
+  private def executeResume[F[_]: Sync](implicit mopidyClient: MopidyClient[F]) =
+    mopidyClient.resumePlayback()
+
+  private def executeShutdown[F[_]](implicit F: Sync[F]): F[Unit] = F.delay {
+    val command = "shutdown now"
+    val exitCode = command.!
+    if (exitCode != 0) {
+      F.raiseError(new RuntimeException(s"$command returned exit code $exitCode"))
+    }
+  }
 
   private def executeStop[F[_]: Sync](implicit mopidyClient: MopidyClient[F]): F[Unit] =
     mopidyClient.stopPlayback() >>

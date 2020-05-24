@@ -72,5 +72,6 @@ case class Spi(
 sealed trait Command
 
 object Command {
+  case object Shutdown extends Command
   case object Stop extends Command
 }

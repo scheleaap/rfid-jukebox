@@ -12,6 +12,8 @@ object Action {
 
   case object Resume extends Action
 
+  case object Shutdown extends Action
+
   case object Stop extends Action
 
 }

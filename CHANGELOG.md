@@ -9,6 +9,6 @@
 * Remove default RFID tags from config ([c8b4fb4](https://github.com/scheleaap/rfid-jukebox/commit/c8b4fb46832f3323649c6afdce7e2300d9a93e0f))
 * Shorten Debian package summary ([5af843e](https://github.com/scheleaap/rfid-jukebox/commit/5af843e095fde73349620f82066efc9ba2cb848f))
 
-# 1.0.0 (2020-02-24)
+## 1.0.0 (2020-02-24)
 
 First version of Scala-based RFID reader.

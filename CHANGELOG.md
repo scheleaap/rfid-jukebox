@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.1.0](https://github.com/scheleaap/rfid-jukebox/compare/v1.0.1...v1.1.0) (2020-05-24)
+
+
+### Features
+
+* Allow cards to shut down the computer ([a89dbbe](https://github.com/scheleaap/rfid-jukebox/commit/a89dbbe794926129ed8bcf37110646cd9800a38f))
+
 ## [1.0.1](https://github.com/scheleaap/rfid-jukebox/compare/v1.0.0...v1.0.1) (2020-03-16)
 
 

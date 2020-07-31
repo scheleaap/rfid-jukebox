@@ -39,6 +39,8 @@ object Actions extends StrictLogging {
 
   private def executeShutdown[F[_]](implicit F: Sync[F]): F[Unit] = F.delay {
     val command = "sudo shutdown now"
+    logger.debug(s"Executing local command $command")
+
     val exitCode = command.!
     if (exitCode != 0) {
       F.raiseError(new RuntimeException(s"$command returned exit code $exitCode"))

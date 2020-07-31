@@ -9,16 +9,26 @@ import sttp.client._
 import sttp.client.playJson._
 import sttp.model.Uri
 
-class DefaultMopidyClient[F[_]] private(rpcEndpoint: Uri)(implicit F: Sync[F], sttpBackend: SttpBackend[F, Nothing, NothingT])
-  extends MopidyClient[F] with StrictLogging {
+class DefaultMopidyClient[F[_]] private (rpcEndpoint: Uri)(
+    implicit F: Sync[F],
+    sttpBackend: SttpBackend[F, Nothing, NothingT]
+) extends MopidyClient[F]
+    with StrictLogging {
 
   private def send[T: BodySerializer](body: T): F[Unit] =
-
     basicRequest
       .post(rpcEndpoint)
       .body(body)
       .send()
-      .map(_ => ())
+      .map(response => {
+        if (!response.isSuccess) {
+          logger.warn(
+            s"Call to $rpcEndpoint with $body failed: " +
+              s"${response.code} ${response.body}"
+          )
+        }
+        ()
+      })
 
   override def addToTracklist(uris: Seq[String]): F[Unit] =
     F.delay(logger.debug(s"Adding to tracklist: $uris")) >>
@@ -47,6 +57,8 @@ class DefaultMopidyClient[F[_]] private(rpcEndpoint: Uri)(implicit F: Sync[F], s
 }
 
 object DefaultMopidyClient extends StrictLogging {
-  def apply[F[_]](rpcEndpoint: Uri)(implicit F: Sync[F], sttpBackend: SttpBackend[F, Nothing, NothingT]): DefaultMopidyClient[F] =
+  def apply[F[_]](
+      rpcEndpoint: Uri
+  )(implicit F: Sync[F], sttpBackend: SttpBackend[F, Nothing, NothingT]): DefaultMopidyClient[F] =
     new DefaultMopidyClient[F](rpcEndpoint)
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.1...v1.1.2) (2020-07-31)
+
+
+### Bug Fixes
+
+* Add log message when shutting down ([7183037](https://github.com/scheleaap/rfid-jukebox/commit/71830373050ca3c3c9225ff109ffd02c96782b87))
+* Log failed calls to Mopidy ([4c89a88](https://github.com/scheleaap/rfid-jukebox/commit/4c89a88215a4caf4ff1b59576dac7ba512e4049c))
+
 ## [1.1.1](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.0...v1.1.1) (2020-05-24)
 
 

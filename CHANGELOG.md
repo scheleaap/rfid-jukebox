@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.2...v1.1.3) (2020-07-31)
+
+
+### Bug Fixes
+
+* Send Content-Type header to Mopidy ([f8ce535](https://github.com/scheleaap/rfid-jukebox/commit/f8ce535890aff6bda9ca86fb927af06c5ccdfe52))
+
 ## [1.1.2](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.1...v1.1.2) (2020-07-31)
 
 

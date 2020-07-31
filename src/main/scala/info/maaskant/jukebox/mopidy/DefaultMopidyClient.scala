@@ -19,6 +19,7 @@ class DefaultMopidyClient[F[_]] private (rpcEndpoint: Uri)(
     basicRequest
       .post(rpcEndpoint)
       .body(body)
+      .contentType("application/json")
       .send()
       .map(response => {
         if (!response.isSuccess) {

@@ -14,6 +14,7 @@ libraryDependencies ++= {
     "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % sttpClient, // TODO Replace with httpclient-backend below once it contains Monix support
     //"com.softwaremill.sttp.client" %% "httpclient-backend" % sttpClient,
     "io.monix" %% "monix" % "3.3.0",
+    "javazoom" % "jlayer" % "1.0.1",
 
     // Logging
     "org.tinylog" % "tinylog-api" % "2.2.0",

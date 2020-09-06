@@ -1,11 +1,15 @@
 package info.maaskant.jukebox
 
-import cats.effect.Sync
+import java.io.InputStream
+
+import cats.effect.{Resource, Sync}
 import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.mopidy.{MopidyClient, MopidyUri}
+import javazoom.jl.player
+import javazoom.jl.player.Player
 
 import scala.sys.process._
 import scala.util.control.NonFatal
@@ -17,6 +21,7 @@ object Actions extends StrictLogging {
       case Action.Play(uri) => executePlay(uri)
       case Action.Resume => executeResume
       case Action.Shutdown => executeShutdown
+      case Action.SignalReady => executeSignalReady
       case Action.Stop => executeStop
     }).map(_ => true).recoverWith {
       case NonFatal(t) =>
@@ -46,6 +51,11 @@ object Actions extends StrictLogging {
       F.raiseError(new RuntimeException(s"$command returned exit code $exitCode"))
     }
   }
+
+  private def executeSignalReady[F[_]](implicit F: Sync[F]): F[Unit] =
+    Resource.fromAutoCloseable[F, InputStream](F.delay(getClass.getResourceAsStream("test.mp3"))).use { inputStream =>
+      F.delay(new Player(inputStream).play())
+    }
 
   private def executeStop[F[_]: Sync](implicit mopidyClient: MopidyClient[F]): F[Unit] =
     mopidyClient.stopPlayback() >>

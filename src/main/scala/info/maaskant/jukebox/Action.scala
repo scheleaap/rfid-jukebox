@@ -6,6 +6,8 @@ sealed trait Action
 
 object Action {
 
+  case object SignalReady extends Action
+
   case object Pause extends Action
 
   case class Play(uri: MopidyUri) extends Action

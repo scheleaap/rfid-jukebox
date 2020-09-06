@@ -1,8 +1,8 @@
 package info.maaskant.jukebox
 
-import info.maaskant.jukebox.Action.{Pause, Play, Resume}
+import info.maaskant.jukebox.Action.{Pause, Play, Resume, SignalReady}
 import info.maaskant.jukebox.Card.Album
-import info.maaskant.jukebox.State.{Paused, Playing, Stopped}
+import info.maaskant.jukebox.State.{Paused, Playing, Stopped, Uninitialized}
 import info.maaskant.jukebox.mopidy.MopidyUri
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -10,6 +10,10 @@ import org.scalatest.matchers.should.Matchers
 class StateMachineTest extends AnyFlatSpec with Matchers {
   private val album1 = Album(MopidyUri("album1"))
   private val album2 = Album(MopidyUri("album2"))
+
+  "Uninitialized, any" should "Stopped, SignalReady" in {
+    Uninitialized(Card.None) should be(Stopped, Some(SignalReady))
+  }
 
   "Stopped, nothing" should "Stopped, None" in {
     Stopped(Card.None) should be(Stopped, None)

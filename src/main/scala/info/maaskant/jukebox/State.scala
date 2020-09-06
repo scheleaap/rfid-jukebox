@@ -1,6 +1,6 @@
 package info.maaskant.jukebox
 
-import info.maaskant.jukebox.Action.{Pause, Play, Resume}
+import info.maaskant.jukebox.Action.{Pause, Play, Resume, SignalReady}
 import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.mopidy.MopidyUri
 
@@ -9,6 +9,10 @@ sealed trait State {
 }
 
 object State {
+
+  case object Uninitialized extends State {
+    override def apply(input: Card): (State, Option[Action]) = Stopped -> Some(SignalReady)
+  }
 
   case object Stopped extends State {
     override def apply(input: Card): (State, Option[Action]) = input match {

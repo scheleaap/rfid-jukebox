@@ -1,17 +1,18 @@
 package info.maaskant.jukebox
-import java.io.IOException
+
 import java.net.URI
 
 import cats.effect.Sync
 import cats.syntax.flatMap._
+import cats.syntax.functor._
 import info.maaskant.jukebox.mopidy.MopidyUri
 import info.maaskant.jukebox.rfid.Uid
 import pureconfig.ConvertHelpers._
 import pureconfig.configurable._
-import pureconfig.error.ConfigReaderFailures
+import pureconfig.error.ConfigReaderException
 import pureconfig.generic.auto._
 import pureconfig.generic.semiauto._
-import pureconfig.{ConfigReader, ConfigSource, _}
+import pureconfig.{ConfigReader, ConfigSource}
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -34,21 +35,11 @@ object Config {
       .load[Config]
   }
 
-  def loadF[F[_]]()(implicit F: Sync[F]): F[Config] = F.delay(load()).flatMap {
-    case Left(ConfigReaderFailures(h, t)) => {
-      val errorDescription: String = (h :: t)
-        .map(f =>
-          f.location match {
-            case None => s"${f.description}"
-            case Some(location) => s"${f.description} @ $location"
-          }
-        )
-        .mkString("\n  ", "\n  ", "\n")
-      val message = s"Error while reading configuration: [$errorDescription]"
-      F.raiseError(new IOException(message))
-    }
-    case Right(config) => F.pure(config)
-  }
+  def loadF[F[_]]()(implicit F: Sync[F]): F[Config] =
+    for {
+      i <- F.delay(load().left.map(ConfigReaderException(_)))
+      j <- F.fromEither(i)
+    } yield j
 }
 
 case class Config(

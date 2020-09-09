@@ -55,6 +55,14 @@ class DefaultMopidyClient[F[_]] private (rpcEndpoint: Uri)(
     F.delay(logger.debug("Stopping playback")) >>
       send(StopPlayback)
 
+  override def setRepeat(enable: Boolean): F[Unit] =
+    F.delay(logger.debug(f"Setting repeat to $enable")) >>
+      send(SetRepeat(enable))
+
+  override def setShuffle(enable: Boolean): F[Unit] =
+    F.delay(logger.debug(f"Setting shuffle to $enable")) >>
+      send(SetShuffle(enable))
+
 }
 
 object DefaultMopidyClient extends StrictLogging {

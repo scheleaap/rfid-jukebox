@@ -12,19 +12,22 @@ import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.model.Uri
 
 object Application extends TaskApp with StrictLogging {
-  private def createCardMapping(albums: Map[Uid, MopidyUri], commands: Map[Uid, Command]): Map[Uid, Card] =
-    albums.map { case (uid, uri) => (uid, Album(uri)) } ++
+  private def createCardMapping(albums: Map[Uid, Either[MopidyUri, Config.Album]], commands: Map[Uid, Config.Command]): Map[Uid, Card] =
+    albums.map {
+      case (uid, Left(uri)) => (uid, Album(uri, shuffle = false, repeat = false))
+      case (uid, Right(album)) => (uid, Album(album.uri, shuffle = album.shuffle, repeat = album.repeat))
+    } ++
       commands.map { case (uid, command) =>
         (
           uid,
           command match {
-            case Command.Shutdown => Card.Shutdown
-            case Command.Stop => Card.Stop
+            case Config.Command.Shutdown => Card.Shutdown
+            case Config.Command.Stop => Card.Stop
           }
         )
       }
 
-  private def createCardReader(config: Spi) = {
+  private def createCardReader(config: Config.Spi) = {
     Mfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
 //    new TimeBasedReader()
 //    new FixedUidReader(

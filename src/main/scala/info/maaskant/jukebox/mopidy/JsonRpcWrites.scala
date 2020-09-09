@@ -22,6 +22,12 @@ object JsonRpcWrites {
   implicit val resumePlaybackWrites: Writes[ResumePlayback.type] = (value: ResumePlayback.type) =>
     jsonRpc("core.playback.resume")
 
+  implicit val setRepeatWrites: Writes[SetRepeat] = (value: SetRepeat) =>
+    jsonRpc("core.tracklist.set_repeat", Json.obj("value" -> value.enable))
+
+  implicit val setShuffleWrites: Writes[SetShuffle] = (value: SetShuffle) =>
+    jsonRpc("core.tracklist.set_random", Json.obj("value" -> value.enable))
+
   implicit val startPlaybackWrites: Writes[StartPlayback.type] = (value: StartPlayback.type) =>
     jsonRpc("core.playback.play")
 

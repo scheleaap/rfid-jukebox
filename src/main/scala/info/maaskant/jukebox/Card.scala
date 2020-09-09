@@ -12,7 +12,7 @@ object Card {
 
   case object Unknown extends Card
 
-  case class Album(spotifyUri: MopidyUri) extends Card
+  case class Album(mopidyUri: MopidyUri, shuffle: Boolean, repeat: Boolean) extends Card
 
   case object Shutdown extends Card
 

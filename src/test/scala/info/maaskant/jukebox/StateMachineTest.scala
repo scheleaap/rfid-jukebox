@@ -8,8 +8,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class StateMachineTest extends AnyFlatSpec with Matchers {
-  private val album1 = Album(MopidyUri("album1"))
-  private val album2 = Album(MopidyUri("album2"))
+  private val album1 = Album(MopidyUri("album1"), shuffle = false, repeat = true)
+  private val album2 = Album(MopidyUri("album2"), shuffle = true, repeat = false)
 
   "Stopped, nothing" should "Stopped, None" in {
     Stopped(Card.None) should be(Stopped, None)
@@ -81,11 +81,11 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
 
   private def pause: Some[Action.Pause.type] = Some(Pause)
 
-  private def paused(album: Album): Paused = Paused(album.spotifyUri)
+  private def paused(album: Album): Paused = Paused(album.mopidyUri)
 
-  private def play(album: Album): Option[Play] = Some(Play(album.spotifyUri))
+  private def play(album: Album): Option[Play] = Some(Play(album.mopidyUri, album.shuffle, album.repeat))
 
-  private def playing(album: Album): Playing = Playing(album.spotifyUri)
+  private def playing(album: Album): Playing = Playing(album.mopidyUri)
 
   private def resume: Some[Action.Resume.type] = Some(Resume)
 

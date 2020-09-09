@@ -14,7 +14,7 @@ object Actions extends StrictLogging {
   def executeAction[F[_]: Sync](action: Action)(implicit mopidyClient: MopidyClient[F]): F[Boolean] =
     (action match {
       case Action.Pause => executePause
-      case Action.Play(uri) => executePlay(uri)
+      case Action.Play(uri, shuffle, repeat) => executePlay(uri, shuffle, repeat)
       case Action.Resume => executeResume
       case Action.Shutdown => executeShutdown
       case Action.Stop => executeStop
@@ -29,10 +29,14 @@ object Actions extends StrictLogging {
   private def executePause[F[_]: Sync](implicit mopidyClient: MopidyClient[F]): F[Unit] =
     mopidyClient.pausePlayback()
 
-  private def executePlay[F[_]: Sync](uri: MopidyUri)(implicit mopidyClient: MopidyClient[F]): F[Unit] =
+  private def executePlay[F[_]: Sync](uri: MopidyUri, shuffle: Boolean, repeat: Boolean)(
+      implicit mopidyClient: MopidyClient[F]
+  ): F[Unit] =
     mopidyClient.clearTracklist() >>
       mopidyClient.addToTracklist(Seq(uri.value)) >>
-      mopidyClient.startPlayback()
+      mopidyClient.setShuffle(shuffle) >>
+      mopidyClient.startPlayback() >>
+      mopidyClient.setRepeat(repeat)
 
   private def executeResume[F[_]: Sync](implicit mopidyClient: MopidyClient[F]) =
     mopidyClient.resumePlayback()

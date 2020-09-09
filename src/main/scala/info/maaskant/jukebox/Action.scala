@@ -8,7 +8,7 @@ object Action {
 
   case object Pause extends Action
 
-  case class Play(uri: MopidyUri) extends Action
+  case class Play(uri: MopidyUri, shuffle: Boolean, repeat: Boolean) extends Action
 
   case object Resume extends Action
 

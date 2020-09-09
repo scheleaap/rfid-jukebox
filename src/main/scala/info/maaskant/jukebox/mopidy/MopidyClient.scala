@@ -9,6 +9,10 @@ trait MopidyClient[F[_]] {
 
   def resumePlayback(): F[Unit]
 
+  def setRepeat(enable: Boolean): F[Unit]
+
+  def setShuffle(enable: Boolean): F[Unit]
+
   def startPlayback(): F[Unit]
 
   def stopPlayback(): F[Unit]

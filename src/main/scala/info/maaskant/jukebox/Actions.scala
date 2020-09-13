@@ -1,9 +1,8 @@
 package info.maaskant.jukebox
 
+import cats.Parallel
 import cats.effect.Sync
-import cats.syntax.applicativeError._
-import cats.syntax.flatMap._
-import cats.syntax.functor._
+import cats.implicits._
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.mopidy.{MopidyClient, MopidyUri}
 
@@ -11,7 +10,7 @@ import scala.sys.process._
 import scala.util.control.NonFatal
 
 object Actions extends StrictLogging {
-  def executeAction[F[_]: Sync](action: Action)(implicit mopidyClient: MopidyClient[F]): F[Boolean] =
+  def executeAction[F[_]: Sync: Parallel](action: Action)(implicit mopidyClient: MopidyClient[F]): F[Boolean] =
     (action match {
       case Action.Pause => executePause
       case Action.Play(uri, shuffle, repeat) => executePlay(uri, shuffle, repeat)
@@ -29,14 +28,18 @@ object Actions extends StrictLogging {
   private def executePause[F[_]: Sync](implicit mopidyClient: MopidyClient[F]): F[Unit] =
     mopidyClient.pausePlayback()
 
-  private def executePlay[F[_]: Sync](uri: MopidyUri, shuffle: Boolean, repeat: Boolean)(
+  private def executePlay[F[_]: Sync: Parallel](uri: MopidyUri, shuffle: Boolean, repeat: Boolean)(
       implicit mopidyClient: MopidyClient[F]
-  ): F[Unit] =
-    mopidyClient.clearTracklist() >>
-      mopidyClient.addToTracklist(Seq(uri.value)) >>
-      mopidyClient.setShuffle(shuffle) >>
-      mopidyClient.startPlayback() >>
+  ): F[Unit] = {
+    List(
+      List(
+        mopidyClient.clearTracklist() >> mopidyClient.addToTracklist(Seq(uri.value)),
+        mopidyClient.setShuffle(shuffle)
+      ).parSequence >> mopidyClient.startPlayback(),
       mopidyClient.setRepeat(repeat)
+    ).parSequence
+      .map(_ => ())
+  }
 
   private def executeResume[F[_]: Sync](implicit mopidyClient: MopidyClient[F]) =
     mopidyClient.resumePlayback()

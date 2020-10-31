@@ -18,7 +18,7 @@
     </root>
 
     <logger name="info.maaskant" level="${SERVICE_LOG_LEVEL:-${LOG_LEVEL:-info}}"/>
-    <logger name="org.pmw.tinylog" level="info"/> <!-- MFRC522 log messages -->
+    <logger name="org.pmw.tinylog" level="${MFRC522_LOG_LEVEL:-${LOG_LEVEL:-info}}"/> <!-- All MFRC522 log messages are routed through Tinylog -->
     <logger name="io.netty" level="info"/>
     <logger name="org.asynchttpclient.netty" level="info"/>
 </configuration>

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.3...v1.1.4) (2020-10-31)
+
+
+### Bug Fixes
+
+* Make MFRC522 log level configurable ([5a5d51f](https://github.com/scheleaap/rfid-jukebox/commit/5a5d51fddd5df8e724889b90b37712ceff2da493))
+
 ## [1.1.3](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.2...v1.1.3) (2020-07-31)
 
 

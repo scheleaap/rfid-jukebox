@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.4...v1.1.5) (2020-10-31)
+
+
+### Bug Fixes
+
+* Upgrade to diozero 0.13, switch from Logback to Tinylog ([80dc821](https://github.com/scheleaap/rfid-jukebox/commit/80dc821b65683e8f074841946d7272c0bc7e2c14))
+
 ## [1.1.4](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.3...v1.1.4) (2020-10-31)
 
 

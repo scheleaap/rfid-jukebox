@@ -4,8 +4,6 @@ import java.net.URI
 
 import cats.effect.Sync
 import cats.syntax.flatMap._
-import info.maaskant.jukebox.mopidy.MopidyUri
-import info.maaskant.jukebox.rfid.Uid
 import pureconfig.ConvertHelpers._
 import pureconfig.configurable._
 import pureconfig.error.ConfigReaderFailures

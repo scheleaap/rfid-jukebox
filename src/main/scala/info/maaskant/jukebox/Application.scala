@@ -13,10 +13,7 @@ object Application extends TaskApp with StrictLogging {
       _ <- Task(logger.info(s"Configuration: $config"))
       exitCode <- resources(config)
         .use(cardReader => pipeline(config, cardReader).map(_ => ExitCode.Success))
-        .onErrorHandleWith(t =>
-          Task(logger.error("Fatal error", t))
-            .map(_ => ExitCode.Error)
-        )
+        .onErrorHandleWith(t => Task(logger.error("Fatal error", t)).map(_ => ExitCode.Error))
     } yield exitCode
 
   private def pipeline(

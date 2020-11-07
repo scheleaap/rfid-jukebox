@@ -1,5 +1,7 @@
 package info.maaskant.jukebox
 
+import java.nio.file.{Files, Paths}
+
 import cats.effect.{ExitCode, Resource}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Actions.executeAction
@@ -21,7 +23,7 @@ object Application extends TaskApp with StrictLogging {
   private def pipeline(
       config: Config,
       cardReader: CardReader[Task]
-  ): Task[Long] = {
+  ): Task[_] = {
     Observable
       .repeatEvalF(cardReader.read())
       .delayOnNext(config.readInterval)
@@ -30,12 +32,21 @@ object Application extends TaskApp with StrictLogging {
       .scanEval[State](Task.pure(Starting)) { (s0, card) =>
         updateStateAndExecuteAction(s0, card)
       }
-      //.dump("state")
-      //.foldWhileLeftL(())((_, state) => state match {
-      //  case Stopped => Right(())
-      //  case _ => Left(())
-      //})
-      .countL
+      .doOnNext(i => Task(logger.info(s"State: $i")))
+      .foldWhileLeftL(())((_, state) =>
+        state match {
+          case Finished(start, finish) =>
+            Files.writeString(
+              Paths.get(f"/var/log/rfid-jukebox/$start.log"),
+              f"""
+                 |$start
+                 |$finish
+                 |""".stripMargin
+            )
+            Right(())
+          case _ => Left(())
+        }
+      )
   }
 
   private def resources(config: Config): Resource[Task, CardReader[Task]] =

@@ -53,8 +53,8 @@ object Application extends TaskApp with StrictLogging {
     Observable
       .repeatEvalF(cardReader.read())
       .delayOnNext(config.readInterval)
-      .distinctUntilChanged
-      .doOnNext(i => Task(logger.info(s"Physical card: $i")))
+//      .distinctUntilChanged
+      .doOnNext(i => Task(logger.debug(s"Physical card: $i")))
       .scanEval[State](Task.pure(Starting)) { (s0, card) =>
         updateStateAndExecuteAction(s0, card)
       }
@@ -64,11 +64,11 @@ object Application extends TaskApp with StrictLogging {
           case i: Finished =>
             val dir =
 //              Paths.get(f"/tmp/rfid-jukebox/")
-              Paths.get(f"/home/pi")
+              Paths.get(f"/home/pi/rfid-jukebox-tmp")
             Files.createDirectories(dir)
-            Files.writeString(
-              dir.resolve(f"${i.start}.log"),
-              f"${i.start},${i.finish},${i.duration}\n"
+            Files.write(
+              dir.resolve(f"timestamps-${i.start}.log"),
+              f"${i.start},${i.finish},${i.duration}\n".getBytes()
             )
             Right(())
           case _ => Left(())

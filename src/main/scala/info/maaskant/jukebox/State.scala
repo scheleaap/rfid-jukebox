@@ -1,6 +1,7 @@
 package info.maaskant.jukebox
 
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit.SECONDS
 
 import info.maaskant.jukebox.rfid.Card
 
@@ -23,6 +24,7 @@ object State {
   }
 
   case class Finished(start: LocalDateTime, finish: LocalDateTime) extends State {
+    val duration: Long = SECONDS.between(start, finish)
     override def apply(input: Option[Card]): (State, Option[Action]) = input match {
       case _ => this -> None
     }

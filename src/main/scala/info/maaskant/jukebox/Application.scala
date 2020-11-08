@@ -6,11 +6,37 @@ import cats.effect.{ExitCode, Resource}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Actions.executeAction
 import info.maaskant.jukebox.State._
-import info.maaskant.jukebox.rfid.{Card, CardReader, Mfrc522CardReader}
+import info.maaskant.jukebox.rfid.{
+  Card,
+  CardReader,
+  FakeCardReader,
+  FixedUidReader,
+  Mfrc522CardReader,
+  TimeBasedReader,
+  Uid
+}
 import monix.eval.{Task, TaskApp}
 import monix.reactive.Observable
 
 object Application extends TaskApp with StrictLogging {
+  private def createCardReaderResource(config: Spi) = {
+    Mfrc522CardReader.resource(config.controller, config.chipSelect, config.resetGpio)
+//    FakeCardReader.resource(new TimeBasedReader())
+//    FakeCardReader.resource(
+//      new FixedUidReader(
+//        IndexedSeq(
+//          None,
+//          Some(Uid("ebd1a421")),
+//          Some(Uid("ebd1a421")),
+//          Some(Uid("ebd1a421")),
+//          Some(Uid("042abc4a325e81")),
+//          Some(Uid("042ebc4a325e81")),
+//          Some(Uid("TODO"))
+//        )
+//      )
+//    )
+  }
+
   override def run(args: List[String]): Task[ExitCode] =
     for {
       config <- Config.loadF()
@@ -32,16 +58,17 @@ object Application extends TaskApp with StrictLogging {
       .scanEval[State](Task.pure(Starting)) { (s0, card) =>
         updateStateAndExecuteAction(s0, card)
       }
-      .doOnNext(i => Task(logger.info(s"State: $i")))
+      .doOnNext(i => Task(logger.debug(s"State: $i")))
       .foldWhileLeftL(())((_, state) =>
         state match {
-          case Finished(start, finish) =>
+          case i: Finished =>
+            val dir =
+//              Paths.get(f"/tmp/rfid-jukebox/")
+              Paths.get(f"/home/pi")
+            Files.createDirectories(dir)
             Files.writeString(
-              Paths.get(f"/var/log/rfid-jukebox/$start.log"),
-              f"""
-                 |$start
-                 |$finish
-                 |""".stripMargin
+              dir.resolve(f"${i.start}.log"),
+              f"${i.start},${i.finish},${i.duration}\n"
             )
             Right(())
           case _ => Left(())
@@ -51,7 +78,7 @@ object Application extends TaskApp with StrictLogging {
 
   private def resources(config: Config): Resource[Task, CardReader[Task]] =
     for {
-      cardReader <- Mfrc522CardReader.resource(config.spi.controller, config.spi.chipSelect, config.spi.resetGpio)
+      cardReader <- createCardReaderResource(config.spi)
     } yield cardReader
 
   private def updateStateAndExecuteAction(s0: State, card: Option[Card]): Task[State] = {

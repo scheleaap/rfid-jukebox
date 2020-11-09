@@ -9,27 +9,19 @@ from mfrc522 import SimpleMFRC522
 
 
 def main(args):
-    # # Parse command-line arguments.
-    # args = argparse.ArgumentParser(
-    #     description=__doc__,
-    #     formatter_class=argparse.RawDescriptionHelpFormatter
-    # )
-    # args.add_argument('source', help='The WMSNotes 3 .nf3 file to process.')
-    # args.add_argument('target', help='The target directory.')
-    # args = args.parse_args()
-
-    # Initialize logging.
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s %(levelname)s %(message)s [%(module)s.%(funcName)s()]',
     )
 
     try:
+        logging.debug("Initializing")
         reader = SimpleMFRC522()
         try:
-            id, text = reader.read()
-            print(id)
-            print(text)
+            while True:
+                logging.debug("Reading")
+                id, text = reader.read()
+                print(f"id: {id}, text: {text}")
         finally:
             GPIO.cleanup()
     except EnvironmentError as e:

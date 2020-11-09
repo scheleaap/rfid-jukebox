@@ -16,10 +16,20 @@ object State {
       Running(LocalDateTime.now()) -> None
   }
 
-  case class Running(start: LocalDateTime) extends State {
+  case class Running(start: LocalDateTime, numConsecutiveNones: Int = 0, finish: Option[LocalDateTime] = None)
+      extends State {
     override def apply(input: Option[Card]): (State, Option[Action]) = input match {
-      case Some(_) => this -> None
-      case None => Finished(start, LocalDateTime.now()) -> None
+      case Some(_) => this.copy(numConsecutiveNones = 0) -> None
+      case None =>
+        if (numConsecutiveNones < 15) {
+          val newFinish = finish match {
+            case None => Some(LocalDateTime.now())
+            case _ => finish
+          }
+          this.copy(numConsecutiveNones = this.numConsecutiveNones + 1, finish = newFinish) -> None
+        } else {
+          Finished(start, finish.getOrElse(LocalDateTime.now())) -> None
+        }
     }
   }
 

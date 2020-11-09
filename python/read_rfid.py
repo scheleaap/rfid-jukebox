@@ -3,6 +3,7 @@
 
 import logging
 import sys
+import time
 
 import RPi.GPIO as GPIO
 from mfrc522 import SimpleMFRC522
@@ -22,6 +23,7 @@ def main(args):
                 logging.debug("Reading")
                 id = reader.read_id()
                 print(f"id: {id}")
+                time.sleep(1)
         finally:
             GPIO.cleanup()
     except EnvironmentError as e:

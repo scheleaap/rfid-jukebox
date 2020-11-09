@@ -6,17 +6,11 @@ import cats.effect.{ExitCode, Resource}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Actions.executeAction
 import info.maaskant.jukebox.State._
-import info.maaskant.jukebox.rfid.{
-  Card,
-  CardReader,
-  FakeCardReader,
-  FixedUidReader,
-  Mfrc522CardReader,
-  TimeBasedReader,
-  Uid
-}
+import info.maaskant.jukebox.rfid.{Card, CardReader, FakeCardReader, FixedUidReader, Mfrc522CardReader, TimeBasedReader, Uid}
 import monix.eval.{Task, TaskApp}
 import monix.reactive.Observable
+
+import scala.concurrent.duration.DurationInt
 
 object Application extends TaskApp with StrictLogging {
   private def createCardReaderResource(config: Spi) = {
@@ -52,7 +46,7 @@ object Application extends TaskApp with StrictLogging {
   ): Task[_] = {
     Observable
       .repeatEvalF(cardReader.read())
-      .delayOnNext(config.readInterval)
+      .delayOnNext(1.second)
 //      .distinctUntilChanged
       .doOnNext(i => Task(logger.debug(s"Physical card: $i")))
       .scanEval[State](Task.pure(Starting)) { (s0, card) =>

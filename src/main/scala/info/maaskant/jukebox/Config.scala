@@ -42,8 +42,7 @@ object Config {
 }
 
 case class Config(
-    spi: Spi,
-    readInterval: FiniteDuration,
+    spi: Spi
 )
 
 case class Spi(

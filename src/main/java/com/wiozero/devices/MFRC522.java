@@ -524,7 +524,7 @@ public class MFRC522 implements Closeable {
 	/**
 	 * Perform soft reset of AddicoreRFID Module
 	 */
-	private void reset() {
+	public void reset() {
 		writeRegister(PcdRegister.COMMAND_REG, PcdCommand.SOFT_RESET);
 		// The datasheet does not mention how long the SoftRest command takes to complete.
 		// But the MFRC522 might have been in soft power-down mode (triggered by bit 4 of CommandReg) 

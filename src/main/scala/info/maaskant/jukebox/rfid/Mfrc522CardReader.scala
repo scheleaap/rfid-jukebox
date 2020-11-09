@@ -1,5 +1,7 @@
 package info.maaskant.jukebox.rfid
 
+import cats.implicits._
+import cats.effect.implicits._
 import cats.effect.{Resource, Sync}
 import com.wiozero.devices.MFRC522
 import com.typesafe.scalalogging.StrictLogging
@@ -36,7 +38,20 @@ class Mfrc522CardReader[F[_]] private (reader: MFRC522)(implicit F: Sync[F]) ext
 
 object Mfrc522CardReader extends StrictLogging {
   def apply[F[_]](controller: Int, chipSelect: Int, resetGpio: Int)(implicit F: Sync[F]): F[Mfrc522CardReader[F]] =
-    F.delay(new Mfrc522CardReader(new MFRC522(controller, chipSelect, resetGpio)))
+    F.delay({
+        val mfrc = new MFRC522(controller, chipSelect, resetGpio)
+        mfrc -> mfrc.performSelfTest()
+      })
+      .flatMap {
+        case (mfrc, selfTestSuccessful) =>
+          if (selfTestSuccessful) {
+            F.pure(new Mfrc522CardReader(mfrc))
+          } else {
+            F.delay(mfrc.close())
+              .flatMap(_ => F.raiseError(new RuntimeException("Self test failed")))
+          }
+
+      }
 
   def resource[F[_]](controller: Int, chipSelect: Int, resetGpio: Int)(
       implicit F: Sync[F]

@@ -2,7 +2,7 @@ package info.maaskant.jukebox
 
 import info.maaskant.jukebox.Action.{Pause, Play, Resume}
 import info.maaskant.jukebox.Card.Album
-import info.maaskant.jukebox.State.{Paused, Playing, Stopped}
+import info.maaskant.jukebox.PlaybackState.{Paused, Playing, Stopped}
 import info.maaskant.jukebox.mopidy.MopidyUri
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -12,34 +12,34 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   private val album2 = Album(MopidyUri("album2"), shuffle = true, repeat = false)
 
   "Stopped, nothing" should "Stopped, None" in {
-    Stopped(Card.None) should be(Stopped, None)
+    State(Stopped)(Card.None) should be(stopped, None)
   }
 
   "Stopped, album" should "Playing, Play" in {
-    Stopped(album1) should be(playing(album1), play(album1))
+    State(Stopped)(album1) should be(playing(album1), play(album1))
   }
 
   "Stopped, unknown card" should "Stopped, None" in {
-    Stopped(Card.Unknown) should be(Stopped, None)
+    State(Stopped)(Card.Unknown) should be(stopped, None)
   }
 
   "Stopped, shutdown" should "Stopped, Shutdown" in {
-    Stopped(Card.Shutdown) should be(Stopped, shutdown)
+    State(Stopped)(Card.Shutdown) should be(stopped, shutdown)
   }
 
   "Stopped, stop" should "Stopped, None" in {
-    Stopped(Card.Stop) should be(Stopped, None)
+    State(Stopped)(Card.Stop) should be(stopped, None)
   }
 
   "Playing, nothing" should "Paused, Pause" in {
     playing(album1)(Card.None) should be(paused(album1), pause)
   }
 
-  "Playing, same card" should "Playing, None" in {
+  "Playing, same album" should "Playing, None" in {
     playing(album1)(album1) should be(playing(album1), None)
   }
 
-  "Playing, different card" should "Playing, Play" in {
+  "Playing, different album" should "Playing, Play" in {
     playing(album1)(album2) should be(playing(album2), play(album2))
   }
 
@@ -52,7 +52,7 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   }
 
   "Playing, stop" should "Stopped, Stop" in {
-    playing(album1)(Card.Stop) should be(Stopped, stop)
+    playing(album1)(Card.Stop) should be(stopped, stop)
   }
 
   "Paused, nothing" should "Paused, None" in {
@@ -76,20 +76,22 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   }
 
   "Paused, stop" should "Stopped, Stop" in {
-    paused(album1)(Card.Stop) should be(Stopped, stop)
+    paused(album1)(Card.Stop) should be(stopped, stop)
   }
 
   private def pause: Some[Action.Pause.type] = Some(Pause)
 
-  private def paused(album: Album): Paused = Paused(album.mopidyUri)
+  private def paused(album: Album): State = State(Paused(album.mopidyUri))
 
   private def play(album: Album): Option[Play] = Some(Play(album.mopidyUri, album.shuffle, album.repeat))
 
-  private def playing(album: Album): Playing = Playing(album.mopidyUri)
+  private def playing(album: Album): State = State(Playing(album.mopidyUri))
 
   private def resume: Some[Action.Resume.type] = Some(Resume)
 
   private def shutdown: Some[Action.Shutdown.type] = Some(Action.Shutdown)
 
   private def stop: Some[Action.Stop.type] = Some(Action.Stop)
+
+  private def stopped: State = State(Stopped)
 }

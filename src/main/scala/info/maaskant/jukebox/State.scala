@@ -4,14 +4,21 @@ import info.maaskant.jukebox.Action.{Pause, Play, Resume}
 import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.mopidy.MopidyUri
 
-sealed trait State {
-  def apply(input: Card): (State, Option[Action])
+case class State(playback: PlaybackState) {
+  def apply(input: Card): (State, Option[Action]) = {
+    val (playbackNew, playbackAction): (PlaybackState, Option[Action]) = playback.apply(input)
+    State(playbackNew) -> playbackAction
+  }
 }
 
-object State {
+sealed trait PlaybackState {
+  def apply(input: Card): (PlaybackState, Option[Action])
+}
 
-  case object Stopped extends State {
-    override def apply(input: Card): (State, Option[Action]) = input match {
+object PlaybackState {
+
+  case object Stopped extends PlaybackState {
+    override def apply(input: Card): (PlaybackState, Option[Action]) = input match {
       case Card.None => this -> None
       case Card.Unknown => this -> None
       case Card.Shutdown => this -> Some(Action.Shutdown)
@@ -20,8 +27,8 @@ object State {
     }
   }
 
-  case class Playing(currentUri: MopidyUri) extends State {
-    override def apply(input: Card): (State, Option[Action]) = input match {
+  case class Playing(currentUri: MopidyUri) extends PlaybackState {
+    override def apply(input: Card): (PlaybackState, Option[Action]) = input match {
       case Card.None => Paused(currentUri) -> Some(Pause)
       case Card.Shutdown => this -> Some(Action.Shutdown)
       case Card.Stop => Stopped -> Some(Action.Stop)
@@ -35,8 +42,8 @@ object State {
     }
   }
 
-  case class Paused(lastUri: MopidyUri) extends State {
-    override def apply(input: Card): (State, Option[Action]) = input match {
+  case class Paused(lastUri: MopidyUri) extends PlaybackState {
+    override def apply(input: Card): (PlaybackState, Option[Action]) = input match {
       case Card.None => (Paused(lastUri), None)
       case Card.Shutdown => this -> Some(Action.Shutdown)
       case Card.Stop => Stopped -> Some(Action.Stop)

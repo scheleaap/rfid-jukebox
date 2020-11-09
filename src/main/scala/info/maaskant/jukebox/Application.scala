@@ -4,9 +4,10 @@ import cats.effect.{ExitCode, Resource, Sync}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Actions.executeAction
 import info.maaskant.jukebox.Card.Album
-import info.maaskant.jukebox.State.Stopped
+import info.maaskant.jukebox.PlaybackState.Stopped
 import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyClient, MopidyUri}
 import info.maaskant.jukebox.rfid.{Mfrc522CardReader, Uid}
+import info.maaskant.jukebox.rfid.{CardReader, FixedUidReader, Mfrc522CardReader, Uid}
 import monix.eval.{Task, TaskApp}
 import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.model.Uri
@@ -28,19 +29,19 @@ object Application extends TaskApp with StrictLogging {
       }
 
   private def createCardReader(config: Config.Spi) = {
-    Mfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
+//    Mfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
 //    new TimeBasedReader()
-//    new FixedUidReader(
-//      IndexedSeq(
-//        None,
-//        Some(Uid("ebd1a421")),
-//        Some(Uid("ebd1a421")),
-//        Some(Uid("ebd1a421")),
-//        Some(Uid("042abc4a325e81")),
-//        Some(Uid("042ebc4a325e81")),
-//        Some(Uid("TODO"))
-//      )
-//    )
+    new FixedUidReader(
+      IndexedSeq(
+        None,
+        Some(Uid("ebd1a421")),
+        Some(Uid("ebd1a421")),
+        Some(Uid("ebd1a421")),
+        Some(Uid("042abc4a325e81")),
+        Some(Uid("042ebc4a325e81")),
+        Some(Uid("TODO"))
+      )
+    )
   }
 
   override def run(args: List[String]): Task[ExitCode] =
@@ -65,7 +66,7 @@ object Application extends TaskApp with StrictLogging {
       .map(physicalCardToLogicalCard(_, cardMapping))
       .distinctUntilChanged
       .doOnNext(i => Task(logger.info(s"Logical card: $i")))
-      .scanEval[State](Task.pure(Stopped)) { (s0, card) =>
+      .scanEval[PlaybackState](Task.pure(Stopped)) { (s0, card) =>
         updateStateAndExecuteAction(s0, card)(mopidyClient)
       }
       //.foldWhileLeftL(())((_, state) => state match {
@@ -89,9 +90,9 @@ object Application extends TaskApp with StrictLogging {
       )
     } yield mopidyClient
 
-  private def updateStateAndExecuteAction(s0: State, card: Card)(implicit
+  private def updateStateAndExecuteAction(s0: PlaybackState, card: Card)(implicit
       mopidyClient: MopidyClient[Task]
-  ): Task[State] = {
+  ): Task[PlaybackState] = {
     val (s1, action0) = s0(card)
     action0 match {
       case None => Task.pure(s1)

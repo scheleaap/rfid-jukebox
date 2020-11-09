@@ -39,12 +39,12 @@ import java.util.List;
 
 import org.tinylog.Logger;
 
-import com.wiozero.api.DigitalOutputDevice;
-import com.wiozero.api.SPIConstants;
-import com.wiozero.api.SpiClockMode;
-import com.wiozero.api.SpiDevice;
-import com.wiozero.util.Hex;
-import com.wiozero.util.SleepUtil;
+import com.diozero.api.DigitalOutputDevice;
+import com.diozero.api.SPIConstants;
+import com.diozero.api.SpiClockMode;
+import com.diozero.api.SpiDevice;
+import com.diozero.util.Hex;
+import com.diozero.util.SleepUtil;
 
 /**
  * <p><a href="http://www.nxp.com/documents/data_sheet/MFRC522.pdf">Datasheet</a><br>

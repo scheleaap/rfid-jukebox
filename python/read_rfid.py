@@ -20,8 +20,8 @@ def main(args):
         try:
             while True:
                 logging.debug("Reading")
-                id, text = reader.read()
-                print(f"id: {id}, text: {text}")
+                id = reader.read_id()
+                print(f"id: {id}")
         finally:
             GPIO.cleanup()
     except EnvironmentError as e:

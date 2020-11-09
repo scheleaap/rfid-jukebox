@@ -1,7 +1,7 @@
 package info.maaskant.jukebox.rfid
 
 import cats.effect.{Resource, Sync}
-import com.diozero.devices.MFRC522
+import com.wiozero.devices.MFRC522
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.util.Try

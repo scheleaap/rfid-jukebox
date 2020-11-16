@@ -21,7 +21,7 @@ object State {
     override def apply(input: Option[Card]): (State, Option[Action]) = input match {
       case Some(_) => this.copy(numConsecutiveNones = 0, finish = None) -> None
       case None =>
-        if (numConsecutiveNones < 15) {
+        if (numConsecutiveNones < 10) {
           val newFinish = finish match {
             case None => Some(LocalDateTime.now())
             case _ => finish

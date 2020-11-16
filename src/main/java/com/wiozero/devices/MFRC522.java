@@ -532,6 +532,7 @@ public class MFRC522 implements Closeable {
 		SleepUtil.sleepMillis(50);
 		while ((readRegister(PcdRegister.COMMAND_REG) & (1<<4)) != 0) {
 			// PCD still restarting - unlikely after waiting 50ms, but better safe than sorry.
+			Logger.trace("PCD still restarting");
 		}
 	}
 
@@ -652,14 +653,14 @@ public class MFRC522 implements Closeable {
 			reference = MFRC522_firmware_referenceV2_0;
 			break;
 		default:	// Unknown version
-			Logger.debug("Self test - END - FAIL");
+			Logger.debug("Self test - END - FAIL: Unknown version");
 			return false; // abort test
 		}
 		
 		// Verify that the results match up to our expectations
 		for (int i=0; i<64; i++) {
 			if (result[i] != reference[i]) {
-				Logger.debug("Self test - END - FAIL");
+				Logger.debug("Self test - END - FAIL: unexpected results");
 				return false;
 			}
 		}

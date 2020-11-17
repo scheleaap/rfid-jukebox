@@ -48,6 +48,10 @@ object Application extends TaskApp with StrictLogging {
       .repeatEvalF(cardReader.read())
       .delayOnNext(1.second)
 //      .distinctUntilChanged
+      .flatMap {
+        case Left(_) => Observable.empty
+        case Right(i) => Observable.pure(i)
+      }
       .doOnNext(i => Task(logger.debug(s"Physical card: $i")))
       .scanEval[State](Task.pure(Starting)) { (s0, card) =>
         updateStateAndExecuteAction(s0, card)

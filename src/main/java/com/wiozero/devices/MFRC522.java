@@ -45,6 +45,7 @@ import com.diozero.api.SpiClockMode;
 import com.diozero.api.SpiDevice;
 import com.diozero.util.Hex;
 import com.diozero.util.SleepUtil;
+import scala.util.Either;
 
 /**
  * <p><a href="http://www.nxp.com/documents/data_sheet/MFRC522.pdf">Datasheet</a><br>
@@ -277,6 +278,10 @@ public class MFRC522 implements Closeable {
 		if (device != null) {
 			device.close();
 		}
+		// TODO Wout
+		if (resetPin != null) {
+			resetPin.close();
+		}
 	}
 	
 	public void setLogReadsAndWrites(boolean logReadsAndWrites) {
@@ -292,7 +297,7 @@ public class MFRC522 implements Closeable {
 		writeRegister(register, command.getValue());
 	}
 	
-	private void writeRegister(PcdRegister register, byte value) {
+	public void writeRegister(PcdRegister register, byte value) {
 		if (logReadsAndWrites) {
 			Logger.debug("(0x{}, 0x{})", Integer.toHexString(register.getValue() & 0xff),
 					Integer.toHexString(value & 0xff));
@@ -436,7 +441,7 @@ public class MFRC522 implements Closeable {
 			}
 		} while ((System.currentTimeMillis() - start_ms) < 100);
 
-		// 100ms passed and nothing happend. Communication with the MFRC522 might be down.
+		// 100ms passed and nothing happened. Communication with the MFRC522 might be down.
 		Logger.error("*** Timed out waiting for CalcCRC to complete");
 		return null;
 	}
@@ -794,26 +799,33 @@ public class MFRC522 implements Closeable {
 		// automatically starts when the PCD stops transmitting.
 		long start_ms = System.currentTimeMillis();
 		boolean timeout = true;
+		boolean timer_interrupt = false;
 		do {
 			byte n = readRegister(PcdRegister.COM_IRQ_REG);
 			if ((n & waitIRq) != 0) {
 				// One of the interrupts that signal success has been set.
+				Logger.debug("One of the interrupts that signal success has been set");
 				timeout = false;
 				break;
 			}
 			// Timer interrupt - nothing received in 25ms
 			if ((n & 0x01) != 0) {
 				Logger.debug("timer interrupt, n: 0x" + Integer.toHexString(n & 0xff));
+				timer_interrupt = true;
 				break;
 			}
 		} while ((System.currentTimeMillis() - start_ms) < 200);
 		
-		// 35.7ms and nothing happend. Communication with the MFRC522 might be down.
+		// 35.7ms and nothing happened. Communication with the MFRC522 might be down.
 		if (timeout) {
-			Logger.debug("Timed out waiting for interrupt");
-			return new Response(StatusCode.TIMEOUT);
+			if (timer_interrupt) {
+				return new Response(StatusCode.TIMEOUT);
+			} else {
+				Logger.debug("Timed out waiting for interrupt. Communication with the MFRC522 might be down.");
+				return new Response(StatusCode.ERROR);
+			}
 		}
-		
+
 		// StartSend=0
 		//clearBitMask(PcdRegister.BIT_FRAMING_REG, (byte) 0x80);
 	
@@ -1867,6 +1879,7 @@ public class MFRC522 implements Closeable {
 
 		byte[] bufferATQA = new byte[2];
 		StatusCode result = requestA(bufferATQA);
+		Logger.trace("isNewCardPresent: " + result);
 		return (result == StatusCode.OK || result == StatusCode.COLLISION);
 	} // End PICC_IsNewCardPresent()
 
@@ -2246,7 +2259,7 @@ public class MFRC522 implements Closeable {
 	public static enum StatusCode {
 		OK(0)				,	// Success
 		ERROR(1)			,	// Error in communication
-		COLLISION(2)		,	// Collission detected
+		COLLISION(2)		,	// Collision detected
 		TIMEOUT(3)			,	// Timeout in communication.
 		NO_ROOM(4)			,	// A buffer is not big enough.
 		INTERNAL_ERROR(5)	,	// Internal error in the code. Should not happen ;-)
@@ -2269,7 +2282,7 @@ public class MFRC522 implements Closeable {
 		}
 	}
 	
-	private static enum PcdRegister {
+	public static enum PcdRegister {
 		// Registers
 		//Reserved00(0x00),
 		COMMAND_REG(0x01),				// starts and stops command execution

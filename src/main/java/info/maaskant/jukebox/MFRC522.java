@@ -45,6 +45,9 @@ import com.diozero.api.SpiClockMode;
 import com.diozero.api.SpiDevice;
 import com.diozero.util.Hex;
 import com.diozero.util.SleepUtil;
+import scala.util.Either;
+import scala.util.Left;
+import scala.util.Right;
 
 /**
  * <p><a href="http://www.nxp.com/documents/data_sheet/MFRC522.pdf">Datasheet</a><br>
@@ -440,7 +443,7 @@ public class MFRC522 implements Closeable {
 		} while ((System.currentTimeMillis() - start_ms) < 100);
 
 		// 100ms passed and nothing happened. Communication with the MFRC522 might be down.
-		Logger.error("*** Timed out waiting for CalcCRC to complete");
+		Logger.debug("*** Timed out waiting for CalcCRC to complete");
 		return null;
 	}
 
@@ -820,7 +823,7 @@ public class MFRC522 implements Closeable {
 				return new Response(StatusCode.TIMEOUT);
 			} else {
 				Logger.warn("Timed out waiting for interrupt. Communication with the MFRC522 might be down.");
-				return new Response(StatusCode.ERROR);
+				return new Response(StatusCode.TIMEOUT_WAITING_FOR_INTERRUPT);
 			}
 		}
 		
@@ -832,7 +835,7 @@ public class MFRC522 implements Closeable {
 		byte error_reg_val = readRegister(PcdRegister.ERROR_REG);
 		// BufferOvfl ParityErr ProtocolErr
 		if ((error_reg_val & 0x13) != 0) {
-			Logger.error("*** Error reg val: 0x" + Integer.toHexString(error_reg_val & 0xff));
+			Logger.debug("*** Error reg val: 0x" + Integer.toHexString(error_reg_val & 0xff));
 			return new Response(StatusCode.ERROR);
 		}
 		
@@ -873,23 +876,23 @@ public class MFRC522 implements Closeable {
 			Logger.debug("Checking CRC");
 			// In this case a MIFARE Classic NAK is not OK.
 			if (back_len == 1 && valid_bits == 4) {
-				Logger.error("*** MIFARE Classic NAK is not ok");
+				Logger.debug("*** MIFARE Classic NAK is not ok");
 				return new Response(StatusCode.MIFARE_NACK);
 			}
 			// We need at least the CRC_A value and all 8 bits of the last byte must be received.
 			if (back_len < 2 || valid_bits != 0) {
-				Logger.error("*** CRC was wrong");
+				Logger.debug("*** CRC was wrong");
 				return new Response(StatusCode.CRC_WRONG);
 			}
 			// Verify CRC_A - do our own calculation and store the control in controlBuffer.
 			byte[] control_buffer = calculateCRC(back_data, back_len-2);
 			if (control_buffer == null) {
-				Logger.error("*** Control buffer from PCD_CalculateCRC was null");
+				Logger.debug("*** Control buffer from PCD_CalculateCRC was null");
 				return new Response(StatusCode.TIMEOUT);
 			}
 			
 			if ((back_data[back_len-2] != control_buffer[0]) || (back_data[back_len-1] != control_buffer[1])) {
-				Logger.error("*** CRC was wrong");
+				Logger.debug("*** CRC was wrong");
 				return new Response(StatusCode.CRC_WRONG);
 			}
 		}
@@ -946,7 +949,11 @@ public class MFRC522 implements Closeable {
 		byte[] back_data = response.getBackData();
 		int back_len = response.getBackLen();
 		// ATQA must be exactly 16 bits.
-		if (back_len != 2 || response.getValidBits() != 0) {
+		if (back_len != 2) {
+			Logger.debug("back_len: expected 2, was " + back_len);
+			return StatusCode.ERROR;
+		} else if (response.getValidBits() != 0) {
+			Logger.debug("response.getValidBits(): expected 0, was " + response.getValidBits());
 			return StatusCode.ERROR;
 		}
 		
@@ -1003,7 +1010,7 @@ public class MFRC522 implements Closeable {
 		
 		// Sanity checks
 		if (validBits > 80) {
-			Logger.error("*** Error: validBits ({}) was > 80", Byte.valueOf(validBits));
+			Logger.debug("*** Error: validBits ({}) was > 80", Byte.valueOf(validBits));
 			return null;
 		}
 		
@@ -1042,7 +1049,7 @@ public class MFRC522 implements Closeable {
 				break;
 			
 			default:
-				Logger.error("*** Error: invalid cascade_level ()", Byte.valueOf(cascade_level));
+				Logger.debug("*** Error: invalid cascade_level ()", Byte.valueOf(cascade_level));
 				return null;
 			}
 			
@@ -1091,7 +1098,7 @@ public class MFRC522 implements Closeable {
 					//result = PCD_CalculateCRC(buffer, 7, &buffer[7]);
 					byte[] crc = calculateCRC(buffer, 7);
 					if (crc == null) {
-						Logger.error("*** Error calculating CRC");
+						Logger.debug("*** Error calculating CRC");
 						return null;
 					}
 					// Note C++ code stores CRC in the last 2 bytes of buffer
@@ -1131,7 +1138,7 @@ public class MFRC522 implements Closeable {
 				Response response = transceiveData(tx_data, (byte) tx_last_bits, (byte) rx_align);
 				//result = PCD_TransceiveData(buffer, bufferUsed, responseBuffer, &responseLength, &txLastBits, rxAlign);
 				if (response.getBackData() == null) {
-					Logger.error("*** got no back data from transcieveData, aborting");
+					Logger.debug("*** got no back data from transcieveData, aborting");
 					return null;
 				}
 				System.arraycopy(response.getBackData(), 0, buffer, response_buffer_offset, response.getBackLen());
@@ -1141,7 +1148,7 @@ public class MFRC522 implements Closeable {
 				if (response.getStatus() == StatusCode.COLLISION) { // More than one PICC in the field => collision.
 					byte valueOfCollReg = readRegister(PcdRegister.COLL_REG); // CollReg[7..0] bits are: ValuesAfterColl reserved CollPosNotValid CollPos[4:0]
 					if ((valueOfCollReg & 0x20) != 0) { // CollPosNotValid
-						Logger.error("*** valueOfCollReg ({}) has bit 0x20 set", Byte.valueOf(valueOfCollReg));
+						Logger.debug("*** valueOfCollReg ({}) has bit 0x20 set", Byte.valueOf(valueOfCollReg));
 						return null; // Without a valid collision position we cannot continue
 					}
 					int collisionPos = valueOfCollReg & 0x1F; // Values 0-31, 0 means bit 32.
@@ -1149,7 +1156,7 @@ public class MFRC522 implements Closeable {
 						collisionPos = 32;
 					}
 					if (collisionPos <= current_level_known_bits) { // No progress - should not happen 
-						Logger.error("*** collisionPos ({}) is <= current_level_known_bits ({})",
+						Logger.debug("*** collisionPos ({}) is <= current_level_known_bits ({})",
 								Integer.valueOf(collisionPos), Integer.valueOf(current_level_known_bits));
 						//return StatusCode.INTERNAL_ERROR;
 						return null;
@@ -1160,7 +1167,7 @@ public class MFRC522 implements Closeable {
 					index = 1 + (current_level_known_bits / 8) + (count != 0 ? 1 : 0); // First byte is index 0.
 					buffer[index] |= (1 << count);
 				} else if (response.getStatus() != StatusCode.OK) {
-					Logger.error("*** Invalid response from PCD_TransceiveData: {}", response.getStatus());
+					Logger.debug("*** Invalid response from PCD_TransceiveData: {}", response.getStatus());
 					//return response.getStatus();
 					return null;
 				} else { // STATUS_OK
@@ -1183,25 +1190,25 @@ public class MFRC522 implements Closeable {
 			for (int count=0; count<bytesToCopy; count++) {
 				uid_bytes.add(Byte.valueOf(buffer[index++]));
 				if (uid_bytes.size() != uid_index + count + 1) {
-					Logger.error("*** Error, expected uid_bytes size to be " + (uid_index + count + 1) + ", but was " + uid_bytes.size());
+					Logger.debug("*** Error, expected uid_bytes size to be " + (uid_index + count + 1) + ", but was " + uid_bytes.size());
 				}
 			}
 			
 			// Check response SAK (Select Acknowledge)
 			if (response_length != 3 || tx_last_bits != 0) { // SAK must be exactly 24 bits (1 byte + CRC_A).
-				Logger.error("*** SAK must be exactly 24 bits (1 byte + CRC_A), response_length={}", Integer.valueOf(response_length));
+				Logger.debug("*** SAK must be exactly 24 bits (1 byte + CRC_A), response_length={}", Integer.valueOf(response_length));
 				//return StatusCode.ERROR;
 				return null;
 			}
 			// Verify CRC_A - do our own calculation
 			byte[] crc = calculateCRC(response_buffer, 1);
 			if (crc == null) {
-				Logger.error("*** Error in PCD_CalculateCRC");
+				Logger.debug("*** Error in PCD_CalculateCRC");
 				//return StatusCode.CRC_WRONG;
 				return null;
 			}
 			if ((crc[0] != response_buffer[1]) || (crc[1] != response_buffer[2])) {
-				Logger.error("*** CRC was wrong");
+				Logger.debug("*** CRC was wrong");
 				//return StatusCode.CRC_WRONG;
 				return null;
 			}
@@ -1218,7 +1225,7 @@ public class MFRC522 implements Closeable {
 		// Set correct uid->size
 		//uid.setSize(3 * cascade_level + 1);
 		if (uid.getSize() != (3 * cascade_level + 1)) {
-			Logger.error("*** Expected UID size to be " + (3 * cascade_level + 1) + " but was " + uid.getSize());
+			Logger.debug("*** Expected UID size to be " + (3 * cascade_level + 1) + " but was " + uid.getSize());
 		}
 		
 		return uid;
@@ -1722,13 +1729,13 @@ public class MFRC522 implements Closeable {
 		int received = resp.getBackLen();
 		validBits = resp.getValidBits();
 		if (resp.getStatus() != StatusCode.OK) {
-			Logger.error(
+			Logger.debug(
 					"Card did not respond to 0x40 after HALT command. Are you sure it is a UID changeable one? Error: {}",
 					resp.getStatus());
 			return false;
 		}
 		if (received != 1 || response[0] != 0x0A) {
-			Logger.error("Got bad response on backdoor 0x40 command: 0x{} ({} valid bits)",
+			Logger.debug("Got bad response on backdoor 0x40 command: 0x{} ({} valid bits)",
 					Integer.toHexString(response[0]), Integer.valueOf(validBits));
 			return false;
 		}
@@ -1740,12 +1747,12 @@ public class MFRC522 implements Closeable {
 		received = resp.getBackLen();
 		validBits = resp.getValidBits();
 		if (resp.getStatus() != StatusCode.OK) {
-				Logger.error("Error in communication at command 0x43, after successfully executing 0x40. Error: {}",
+				Logger.debug("Error in communication at command 0x43, after successfully executing 0x40. Error: {}",
 						resp.getStatus());
 			return false;
 		}
 		if (received != 1 || response[0] != 0x0A) {
-			Logger.error("Got bad response on backdoor 0x43 command: 0x{} ({} valid bits)",
+			Logger.debug("Got bad response on backdoor 0x43 command: 0x{} ({} valid bits)",
 					Integer.toHexString(response[0]), Integer.valueOf(validBits));
 			return false;
 		}
@@ -1768,7 +1775,7 @@ public class MFRC522 implements Closeable {
 	public boolean mifareSetUid(byte[] newUid, UID uid, byte[] authKey) {
 		// UID + BCC byte can not be larger than 16 together
 		if (newUid == null || newUid.length == 0 || newUid.length > 15) {
-			Logger.error("New UID buffer empty, size 0, or size > 15 given");
+			Logger.debug("New UID buffer empty, size 0, or size > 15 given");
 			return false;
 		}
 		
@@ -1784,18 +1791,18 @@ public class MFRC522 implements Closeable {
 				//wakeupA(atqa_answer, &atqa_size);
 				
 				if (! isNewCardPresent() || readCardSerial() == null) {
-					Logger.error("No card was previously selected, and none are available. Failed to set UID.");
+					Logger.debug("No card was previously selected, and none are available. Failed to set UID.");
 					return false;
 				}
 				
 				status = authenticate(true, (byte) 1, authKey, uid);
 				if (status != StatusCode.OK) {
 					// We tried, time to give up
-					Logger.error("Failed to authenticate to card for reading, could not set UID: {}", status);
+					Logger.debug("Failed to authenticate to card for reading, could not set UID: {}", status);
 					return false;
 				}
 			} else {
-				Logger.error("PCD_Authenticate() failed: {}", status);
+				Logger.debug("PCD_Authenticate() failed: {}", status);
 				return false;
 			}
 		}
@@ -1803,7 +1810,7 @@ public class MFRC522 implements Closeable {
 		// Read block 0
 		byte[] block0_buffer = mifareRead((byte) 0);
 		if (block0_buffer == null) {
-			Logger.error("MIFARE_Read() failed: {}. Are you sure your KEY A for sector 0 is 0x{}?", status, Hex.encodeHexString(authKey));
+			Logger.debug("MIFARE_Read() failed: {}. Are you sure your KEY A for sector 0 is 0x{}?", status, Hex.encodeHexString(authKey));
 			return false;
 		}
 		
@@ -1822,14 +1829,14 @@ public class MFRC522 implements Closeable {
 		
 		// Activate UID backdoor
 		if (! mifareOpenUidBackdoor()) {
-			Logger.error("Activating the UID backdoor failed.");
+			Logger.debug("Activating the UID backdoor failed.");
 			return false;
 		}
 		
 		// Write modified block 0 back to card
 		status = mifareWrite((byte) 0, block0_buffer);
 		if (status != StatusCode.OK) {
-			Logger.error("MIFARE_Write() failed: {}", status);
+			Logger.debug("MIFARE_Write() failed: {}", status);
 			return false;
 		}
 		
@@ -1852,7 +1859,7 @@ public class MFRC522 implements Closeable {
 		// Write modified block 0 back to card
 		StatusCode status = mifareWrite((byte) 0, block0_buffer);
 		if (status != StatusCode.OK) {
-			Logger.error("MIFARE_Write() failed: {}", status);
+			Logger.debug("MIFARE_Write() failed: {}", status);
 			return false;
 		}
 		return true;
@@ -1878,6 +1885,30 @@ public class MFRC522 implements Closeable {
 		byte[] bufferATQA = new byte[2];
 		StatusCode result = requestA(bufferATQA);
 		return (result == StatusCode.OK || result == StatusCode.COLLISION);
+	} // End PICC_IsNewCardPresent()
+
+	/**
+	 * Returns true if a PICC responds to PICC_CMD_REQA.
+	 * Only "new" cards in state IDLE are invited. Sleeping cards in state HALT are ignored.
+	 *
+	 * @return bool
+	 */
+	public Either<StatusCode, Boolean> isNewCardPresent2() {
+		// Reset baud rates
+		writeRegister(PcdRegister.TX_MODE_REG, (byte) 0x00);
+		writeRegister(PcdRegister.RX_MODE_REG, (byte) 0x00);
+		// Reset ModWidthReg
+		writeRegister(PcdRegister.MOD_WIDTH_REG, (byte) 0x26);
+
+		byte[] bufferATQA = new byte[2];
+		StatusCode result = requestA(bufferATQA);
+		if (result == StatusCode.OK || result == StatusCode.COLLISION) {
+			return new Right<>(Boolean.TRUE);
+		} else if (result == StatusCode.TIMEOUT) {
+			return new Right<>(Boolean.FALSE);
+		} else {
+			return new Left<>(result);
+		}
 	} // End PICC_IsNewCardPresent()
 
 	/**
@@ -2254,15 +2285,16 @@ public class MFRC522 implements Closeable {
 	}
 	
 	public static enum StatusCode {
-		OK(0)				,	// Success
-		ERROR(1)			,	// Error in communication
-		COLLISION(2)		,	// Collision detected
-		TIMEOUT(3)			,	// Timeout in communication.
-		NO_ROOM(4)			,	// A buffer is not big enough.
-		INTERNAL_ERROR(5)	,	// Internal error in the code. Should not happen ;-)
-		INVALID(6)			,	// Invalid argument.
-		CRC_WRONG(7)		,	// The CRC_A does not match
-		MIFARE_NACK(0xff)	;	// A MIFARE PICC responded with NAK.
+		OK(0), // Success
+		ERROR(1), // Error in communication
+		COLLISION(2), // Collision detected
+		TIMEOUT(3), // Timeout in communication.
+		NO_ROOM(4), // A buffer is not big enough.
+		INTERNAL_ERROR(5), // Internal error in the code. Should not happen ;-)
+		INVALID(6), // Invalid argument.
+		CRC_WRONG(7), // The CRC_A does not match
+		TIMEOUT_WAITING_FOR_INTERRUPT(8), // Timeout waiting for interrupt. Communication with the MFRC522 might be down.
+		MIFARE_NACK(0xff);    // A MIFARE PICC responded with NAK.
 		
 		private byte code;
 		

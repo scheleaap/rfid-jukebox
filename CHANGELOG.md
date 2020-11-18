@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.7](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.6...v1.1.7) (2020-11-18)
+
+
+### Bug Fixes
+
+* Improve RFID reading robustness ([0ed3329](https://github.com/scheleaap/rfid-jukebox/commit/0ed332948d505c86c6edd2609bffca9ef3d4be91))
+
 ## [1.1.6](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.5...v1.1.6) (2020-11-18)
 
 

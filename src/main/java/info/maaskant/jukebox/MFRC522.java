@@ -1,4 +1,4 @@
-package com.diozero.devices;
+package info.maaskant.jukebox;
 
 /*
  * #%L
@@ -277,6 +277,9 @@ public class MFRC522 implements Closeable {
 		if (device != null) {
 			device.close();
 		}
+		if (resetPin != null) {
+			resetPin.close();
+		}
 	}
 	
 	public void setLogReadsAndWrites(boolean logReadsAndWrites) {
@@ -291,8 +294,8 @@ public class MFRC522 implements Closeable {
 	private void writeRegister(PcdRegister register, PcdCommand command) {
 		writeRegister(register, command.getValue());
 	}
-	
-	private void writeRegister(PcdRegister register, byte value) {
+
+	public void writeRegister(PcdRegister register, byte value) {
 		if (logReadsAndWrites) {
 			Logger.debug("(0x{}, 0x{})", Integer.toHexString(register.getValue() & 0xff),
 					Integer.toHexString(value & 0xff));
@@ -436,11 +439,11 @@ public class MFRC522 implements Closeable {
 			}
 		} while ((System.currentTimeMillis() - start_ms) < 100);
 
-		// 100ms passed and nothing happend. Communication with the MFRC522 might be down.
+		// 100ms passed and nothing happened. Communication with the MFRC522 might be down.
 		Logger.error("*** Timed out waiting for CalcCRC to complete");
 		return null;
 	}
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Functions for manipulating the MFRC522
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -532,6 +535,7 @@ public class MFRC522 implements Closeable {
 		SleepUtil.sleepMillis(50);
 		while ((readRegister(PcdRegister.COMMAND_REG) & (1<<4)) != 0) {
 			// PCD still restarting - unlikely after waiting 50ms, but better safe than sorry.
+			Logger.trace("PCD still restarting");
 		}
 	}
 
@@ -652,14 +656,14 @@ public class MFRC522 implements Closeable {
 			reference = MFRC522_firmware_referenceV2_0;
 			break;
 		default:	// Unknown version
-			Logger.debug("Self test - END - FAIL");
+			Logger.debug("Self test - END - FAIL: Unknown version");
 			return false; // abort test
 		}
 		
 		// Verify that the results match up to our expectations
 		for (int i=0; i<64; i++) {
 			if (result[i] != reference[i]) {
-				Logger.debug("Self test - END - FAIL");
+				Logger.debug("Self test - END - FAIL: unexpected results");
 				return false;
 			}
 		}
@@ -793,24 +797,31 @@ public class MFRC522 implements Closeable {
 		// automatically starts when the PCD stops transmitting.
 		long start_ms = System.currentTimeMillis();
 		boolean timeout = true;
+		boolean timer_interrupt = false;
 		do {
 			byte n = readRegister(PcdRegister.COM_IRQ_REG);
 			if ((n & waitIRq) != 0) {
 				// One of the interrupts that signal success has been set.
+				Logger.debug("One of the interrupts that signal success has been set");
 				timeout = false;
 				break;
 			}
 			// Timer interrupt - nothing received in 25ms
 			if ((n & 0x01) != 0) {
 				Logger.debug("timer interrupt, n: 0x" + Integer.toHexString(n & 0xff));
+				timer_interrupt = true;
 				break;
 			}
 		} while ((System.currentTimeMillis() - start_ms) < 200);
-		
-		// 35.7ms and nothing happend. Communication with the MFRC522 might be down.
+
+		// 35.7ms and nothing happened. Communication with the MFRC522 might be down.
 		if (timeout) {
-			Logger.debug("Timed out waiting for interrupt");
-			return new Response(StatusCode.TIMEOUT);
+			if (timer_interrupt) {
+				return new Response(StatusCode.TIMEOUT);
+			} else {
+				Logger.warn("Timed out waiting for interrupt. Communication with the MFRC522 might be down.");
+				return new Response(StatusCode.ERROR);
+			}
 		}
 		
 		// StartSend=0
@@ -2245,7 +2256,7 @@ public class MFRC522 implements Closeable {
 	public static enum StatusCode {
 		OK(0)				,	// Success
 		ERROR(1)			,	// Error in communication
-		COLLISION(2)		,	// Collission detected
+		COLLISION(2)		,	// Collision detected
 		TIMEOUT(3)			,	// Timeout in communication.
 		NO_ROOM(4)			,	// A buffer is not big enough.
 		INTERNAL_ERROR(5)	,	// Internal error in the code. Should not happen ;-)
@@ -2267,8 +2278,8 @@ public class MFRC522 implements Closeable {
 			return code;
 		}
 	}
-	
-	private static enum PcdRegister {
+
+	public static enum PcdRegister {
 		// Registers
 		//Reserved00(0x00),
 		COMMAND_REG(0x01),				// starts and stops command execution

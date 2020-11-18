@@ -6,37 +6,36 @@ import info.maaskant.jukebox.Actions.executeAction
 import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.State.Stopped
 import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyClient, MopidyUri}
-import info.maaskant.jukebox.rfid.{CardReader, Mfrc522CardReader, Uid}
+import info.maaskant.jukebox.rfid.{Mfrc522CardReader, Uid}
 import monix.eval.{Task, TaskApp}
-import monix.reactive.Observable
 import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.model.Uri
 
 object Application extends TaskApp with StrictLogging {
   private def createCardMapping(albums: Map[Uid, MopidyUri], commands: Map[Uid, Command]): Map[Uid, Card] =
     albums.map { case (uid, uri) => (uid, Album(uri)) } ++
-      commands.map {
-        case (uid, command) =>
-          (uid, command match {
+      commands.map { case (uid, command) =>
+        (
+          uid,
+          command match {
             case Command.Shutdown => Card.Shutdown
             case Command.Stop => Card.Stop
-          })
+          }
+        )
       }
 
-  private def createCardReaderResource(config: Spi) = {
-    Mfrc522CardReader.resource(config.controller, config.chipSelect, config.resetGpio)
-    //    FakeCardReader.resource(new TimeBasedReader())
-//    FakeCardReader.resource(
-//      new FixedUidReader(
-//        IndexedSeq(
-//          None,
-//          Some(Uid("ebd1a421")),
-//          Some(Uid("ebd1a421")),
-//          Some(Uid("ebd1a421")),
-//          Some(Uid("042abc4a325e81")),
-//          Some(Uid("042ebc4a325e81")),
-//          Some(Uid("TODO"))
-//        )
+  private def createCardReader(config: Spi) = {
+    Mfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
+//    new TimeBasedReader()
+//    new FixedUidReader(
+//      IndexedSeq(
+//        None,
+//        Some(Uid("ebd1a421")),
+//        Some(Uid("ebd1a421")),
+//        Some(Uid("ebd1a421")),
+//        Some(Uid("042abc4a325e81")),
+//        Some(Uid("042ebc4a325e81")),
+//        Some(Uid("TODO"))
 //      )
 //    )
   }
@@ -46,33 +45,26 @@ object Application extends TaskApp with StrictLogging {
       config <- Config.loadF()
       _ <- Task(logger.info(s"Configuration: $config"))
       exitCode <- resources(config)
-        .use {
-          case (mopidyClient, cardReader) =>
-            pipeline(config, mopidyClient, cardReader).map(_ => ExitCode.Success)
-        }
+        .use(mopidyClient => pipeline(config, mopidyClient).map(_ => ExitCode.Success))
         .onErrorHandleWith(t => Task(logger.error("Fatal error", t)).map(_ => ExitCode.Error))
     } yield exitCode
 
   private def pipeline(
       config: Config,
-      mopidyClient: MopidyClient[Task],
-      cardReader: CardReader[Task]
+      mopidyClient: MopidyClient[Task]
   ): Task[Long] = {
+    val cardReader = createCardReader(config.spi)
     val cardMapping: Map[Uid, Card] = createCardMapping(config.albums, config.commands)
 
-    Observable
-      .repeatEvalF(cardReader.read())
+    cardReader
+      .read()
       .delayOnNext(config.readInterval)
-      .distinctUntilChanged
-      //.dump("physical")
       .map(physicalCardToLogicalCard(_, cardMapping))
       .distinctUntilChanged
       .doOnNext(i => Task(logger.info(s"Logical card: $i")))
-      //.dump("logical")
       .scanEval[State](Task.pure(Stopped)) { (s0, card) =>
         updateStateAndExecuteAction(s0, card)(mopidyClient)
       }
-      //.dump("state")
       //.foldWhileLeftL(())((_, state) => state match {
       //  case Stopped => Right(())
       //  case _ => Left(())
@@ -85,18 +77,17 @@ object Application extends TaskApp with StrictLogging {
       .map(pc => cardMapping.getOrElse(pc.uid, Card.Unknown))
       .getOrElse(Card.None)
 
-  private def resources(config: Config): Resource[Task, (DefaultMopidyClient[Task], CardReader[Task])] =
+  private def resources(config: Config): Resource[Task, DefaultMopidyClient[Task]] =
     for {
       sttpBackend <- AsyncHttpClientMonixBackend.resource()
       mopidyClient = DefaultMopidyClient(Uri.apply(config.mopidy.baseUrl))(
         F = implicitly[Sync[Task]],
         sttpBackend = sttpBackend
       )
-      cardReader <- createCardReaderResource(config.spi)
-    } yield (mopidyClient, cardReader)
+    } yield mopidyClient
 
-  private def updateStateAndExecuteAction(s0: State, card: Card)(
-      implicit mopidyClient: MopidyClient[Task]
+  private def updateStateAndExecuteAction(s0: State, card: Card)(implicit
+      mopidyClient: MopidyClient[Task]
   ): Task[State] = {
     val (s1, action0) = s0(card)
     action0 match {

@@ -821,7 +821,7 @@ public class MFRC522 implements Closeable {
 			if (timer_interrupt) {
 				return new Response(StatusCode.TIMEOUT);
 			} else {
-				Logger.debug("Timed out waiting for interrupt. Communication with the MFRC522 might be down.");
+				Logger.warn("Timed out waiting for interrupt. Communication with the MFRC522 might be down.");
 				return new Response(StatusCode.ERROR);
 			}
 		}

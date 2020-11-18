@@ -2,19 +2,19 @@ package info.maaskant.jukebox
 
 import java.nio.file.{Files, Paths}
 
-import cats.effect.{ExitCode, Resource}
+import cats.effect.ExitCode
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Actions.executeAction
 import info.maaskant.jukebox.State._
-import info.maaskant.jukebox.rfid.{Card, CardReader, FakeCardReader, FixedUidReader, Mfrc522CardReader, TimeBasedReader, Uid}
+import info.maaskant.jukebox.rfid.{Card, Mfrc522CardReader}
 import monix.eval.{Task, TaskApp}
 import monix.reactive.Observable
 
 import scala.concurrent.duration.DurationInt
 
 object Application extends TaskApp with StrictLogging {
-  private def createCardReaderResource(config: Spi) = {
-    Mfrc522CardReader.resource(config.controller, config.chipSelect, config.resetGpio)
+  private def createCardReader(config: Spi) = {
+    Mfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
 //    FakeCardReader.resource(new TimeBasedReader())
 //    FakeCardReader.resource(
 //      new FixedUidReader(
@@ -35,17 +35,15 @@ object Application extends TaskApp with StrictLogging {
     for {
       config <- Config.loadF()
       _ <- Task(logger.info(s"Configuration: $config"))
-      exitCode <- resources(config)
-        .use(cardReader => pipeline(config, cardReader).map(_ => ExitCode.Success))
+      exitCode <- pipeline(config).map(_ => ExitCode.Success)
         .onErrorHandleWith(t => Task(logger.error("Fatal error", t)).map(_ => ExitCode.Error))
     } yield exitCode
 
   private def pipeline(
       config: Config,
-      cardReader: CardReader[Task]
   ): Task[_] = {
-    Observable
-      .repeatEvalF(cardReader.read())
+    val cardReader = createCardReader(config.spi)
+    cardReader.read()
       .delayOnNext(1.second)
 //      .distinctUntilChanged
       .flatMap {
@@ -73,11 +71,6 @@ object Application extends TaskApp with StrictLogging {
         }
       )
   }
-
-  private def resources(config: Config): Resource[Task, CardReader[Task]] =
-    for {
-      cardReader <- createCardReaderResource(config.spi)
-    } yield cardReader
 
   private def updateStateAndExecuteAction(s0: State, card: Option[Card]): Task[State] = {
     val (s1, action0) = s0(card)

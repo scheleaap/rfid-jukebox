@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.State.Uninitialized
 import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyUri}
-import info.maaskant.jukebox.rfid.{CardReader, FixedUidReader, Uid}
+import info.maaskant.jukebox.rfid.{CardReader, Mfrc522CardReader, Uid}
 import monix.eval.{Task, TaskApp}
 import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.model.Uri
@@ -26,19 +26,19 @@ object Application extends TaskApp with StrictLogging {
       }
 
   private def createCardReader(config: Spi) = {
-//    Mfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
+    Mfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
 //    new TimeBasedReader()
-    new FixedUidReader(
-      IndexedSeq(
-        None,
-        Some(Uid("ebd1a421")),
-        Some(Uid("ebd1a421")),
-        Some(Uid("ebd1a421")),
-        Some(Uid("042abc4a325e81")),
-        Some(Uid("042ebc4a325e81")),
-        Some(Uid("TODO"))
-      )
-    )
+//    new FixedUidReader(
+//      IndexedSeq(
+//        None,
+//        Some(Uid("ebd1a421")),
+//        Some(Uid("ebd1a421")),
+//        Some(Uid("ebd1a421")),
+//        Some(Uid("042abc4a325e81")),
+//        Some(Uid("042ebc4a325e81")),
+//        Some(Uid("TODO"))
+//      )
+//    )
   }
 
   override def run(args: List[String]): Task[ExitCode] =

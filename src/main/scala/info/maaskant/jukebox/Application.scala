@@ -2,15 +2,15 @@ package info.maaskant.jukebox
 
 import cats.effect.{ExitCode, Resource, Sync}
 import com.typesafe.scalalogging.StrictLogging
-import info.maaskant.jukebox.Actions.executeAction
 import info.maaskant.jukebox.Card.Album
-import info.maaskant.jukebox.State.{Stopped, Uninitialized}
-import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyClient, MopidyUri}
-import info.maaskant.jukebox.rfid.{Mfrc522CardReader, Uid}
-import info.maaskant.jukebox.rfid.{CardReader, FixedUidReader, Mfrc522CardReader, Uid}
+import info.maaskant.jukebox.State.Uninitialized
+import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyUri}
+import info.maaskant.jukebox.rfid.{CardReader, FixedUidReader, Uid}
 import monix.eval.{Task, TaskApp}
 import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.model.Uri
+
+import scala.concurrent.duration.FiniteDuration
 
 object Application extends TaskApp with StrictLogging {
   private def createCardMapping(albums: Map[Uid, MopidyUri], commands: Map[Uid, Command]): Map[Uid, Card] =
@@ -46,26 +46,32 @@ object Application extends TaskApp with StrictLogging {
       config <- Config.loadF()
       _ <- Task(logger.info(s"Configuration: $config"))
       exitCode <- resources(config)
-        .use(mopidyClient => pipeline(config, mopidyClient).map(_ => ExitCode.Success))
+        .use { mopidyClient =>
+          val cardReader = createCardReader(config.spi)
+          val cardMapping: Map[Uid, Card] = createCardMapping(config.albums, config.commands)
+          val actionExecutor = new ActionExecutor(config.hooks, mopidyClient)
+
+          pipeline(cardReader, config.readInterval, cardMapping, actionExecutor)
+            .map(_ => ExitCode.Success)
+        }
         .onErrorHandleWith(t => Task(logger.error("Fatal error", t)).map(_ => ExitCode.Error))
     } yield exitCode
 
   private def pipeline(
-      config: Config,
-      mopidyClient: MopidyClient[Task]
+      cardReader: CardReader,
+      readInterval: FiniteDuration,
+      cardMapping: Map[Uid, Card],
+      actionExecutor: ActionExecutor[Task]
   ): Task[Long] = {
-    val cardReader = createCardReader(config.spi)
-    val cardMapping: Map[Uid, Card] = createCardMapping(config.albums, config.commands)
-
     cardReader
       .read()
-      .delayOnNext(config.readInterval)
+      .delayOnNext(readInterval)
       .map(physicalCardToLogicalCard(_, cardMapping))
       .distinctUntilChanged
       .doOnNext(i => Task(logger.info(s"Logical card: $i")))
-      .scanEval[State](Task.pure(Uninitialized)) { (s0, card) =>
-        updateStateAndExecuteAction(s0, card)(mopidyClient)
-      }
+      .scanEval[State](Task.pure(Uninitialized))(
+        updateStateAndExecuteAction(actionExecutor)
+      )
       //.foldWhileLeftL(())((_, state) => state match {
       //  case Stopped => Right(())
       //  case _ => Left(())
@@ -87,14 +93,12 @@ object Application extends TaskApp with StrictLogging {
       )
     } yield mopidyClient
 
-  private def updateStateAndExecuteAction(s0: State, card: Card)(implicit
-      mopidyClient: MopidyClient[Task]
-  ): Task[State] = {
+  private def updateStateAndExecuteAction(actionExecutor: ActionExecutor[Task])(s0: State, card: Card): Task[State] = {
     val (s1, action0) = s0(card)
     action0 match {
       case None => Task.pure(s1)
       case Some(action) =>
-        executeAction(action).flatMap { success =>
+        actionExecutor.executeAction(action).flatMap { success =>
           if (success) {
             Task(logger.debug(s"New state: $s1")) >> Task.pure(s1)
           } else {

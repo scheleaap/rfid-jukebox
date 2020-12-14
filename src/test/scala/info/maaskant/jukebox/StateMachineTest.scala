@@ -1,6 +1,6 @@
 package info.maaskant.jukebox
 
-import info.maaskant.jukebox.Action.{Pause, Play, Resume, SignalReady}
+import info.maaskant.jukebox.Action.{Pause, Play, Resume, Initialize}
 import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.State.{Paused, Playing, Stopped, Uninitialized}
 import info.maaskant.jukebox.mopidy.MopidyUri
@@ -12,7 +12,7 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   private val album2 = Album(MopidyUri("album2"))
 
   "Uninitialized, any" should "Stopped, SignalReady" in {
-    Uninitialized(Card.None) should be(Stopped, Some(SignalReady))
+    Uninitialized(Card.None) should be(Stopped, Some(Initialize))
   }
 
   "Stopped, nothing" should "Stopped, None" in {

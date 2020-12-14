@@ -69,5 +69,6 @@ object Command {
 }
 
 case class EventHooks(
+    onPlay: Option[String],
     onStartup: Option[String]
 )

@@ -3,6 +3,7 @@ package info.maaskant.jukebox
 import cats.effect.{ExitCode, Resource, Sync}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Card.Album
+import info.maaskant.jukebox.Process.runCommand
 import info.maaskant.jukebox.State.Uninitialized
 import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyUri}
 import info.maaskant.jukebox.rfid.{CardReader, Mfrc522CardReader, Uid}
@@ -50,9 +51,17 @@ object Application extends TaskApp with StrictLogging {
           val cardReader = createCardReader(config.spi)
           val cardMapping: Map[Uid, Card] = createCardMapping(config.albums, config.commands)
           val actionExecutor = new ActionExecutor(config.hooks, mopidyClient)
+          val onCardChangeEventHook = config.hooks
+            .flatMap(_.onCardChange)
+            .fold(Task.unit)(runCommand[Task](raiseError = false))
 
-          pipeline(cardReader, config.readInterval, cardMapping, actionExecutor)
-            .map(_ => ExitCode.Success)
+          pipeline(
+            cardReader,
+            config.readInterval,
+            cardMapping,
+            actionExecutor,
+            onCardChangeEventHook
+          ).map(_ => ExitCode.Success)
         }
         .onErrorHandleWith(t => Task(logger.error("Fatal error", t)).map(_ => ExitCode.Error))
     } yield exitCode
@@ -61,14 +70,18 @@ object Application extends TaskApp with StrictLogging {
       cardReader: CardReader,
       readInterval: FiniteDuration,
       cardMapping: Map[Uid, Card],
-      actionExecutor: ActionExecutor[Task]
+      actionExecutor: ActionExecutor[Task],
+      onCardChangeEventHook: Task[Unit]
   ): Task[Long] = {
     cardReader
       .read()
       .delayOnNext(readInterval)
       .map(physicalCardToLogicalCard(_, cardMapping))
       .distinctUntilChanged
-      .doOnNext(i => Task(logger.info(s"Logical card: $i")))
+      .doOnNext(i =>
+        Task(logger.info(s"Logical card: $i")) >>
+          onCardChangeEventHook
+      )
       .scanEval[State](Task.pure(Uninitialized))(
         updateStateAndExecuteAction(actionExecutor)
       )

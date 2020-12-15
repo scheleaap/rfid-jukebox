@@ -9,8 +9,7 @@ import cats.syntax.functor._
 import cats.syntax.parallel._
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.mopidy.{MopidyClient, MopidyUri}
-
-import scala.sys.process._
+import info.maaskant.jukebox.Process.runCommand
 import scala.util.control.NonFatal
 
 class ActionExecutor[F[_]: Sync: Parallel](eventHooks: Option[EventHooks], mopidyClient: MopidyClient[F])
@@ -36,7 +35,7 @@ class ActionExecutor[F[_]: Sync: Parallel](eventHooks: Option[EventHooks], mopid
 
   private def executePlay(uri: MopidyUri): F[Unit] = {
     List(
-      eventHooks.flatMap(_.onPlay).fold(Sync[F].unit)(runCommand(raiseError = false)),
+      eventHooks.flatMap(_.onPlay).fold(Sync[F].unit)(runCommand[F](raiseError = false)),
       mopidyClient.clearTracklist() >>
         mopidyClient.addToTracklist(Seq(uri.value)) >>
         mopidyClient.startPlayback()
@@ -51,27 +50,9 @@ class ActionExecutor[F[_]: Sync: Parallel](eventHooks: Option[EventHooks], mopid
     runCommand(raiseError = true)("sudo shutdown now")
 
   private def executeInitialize: F[Unit] =
-    eventHooks.flatMap(_.onStartup).fold(Sync[F].unit)(runCommand(raiseError = false))
+    eventHooks.flatMap(_.onInitialize).fold(Sync[F].unit)(runCommand[F](raiseError = false))
 
   private def executeStop: F[Unit] =
     mopidyClient.stopPlayback() >>
       mopidyClient.clearTracklist()
-
-  private def runCommand(raiseError: Boolean)(command: String): F[Unit] = Sync[F]
-    .delay {
-      logger.debug(s"Executing local command $command")
-      command.!
-    }
-    .flatMap { exitCode =>
-      if (exitCode == 0) {
-        Sync[F].delay(logger.debug(s"Successfully executed local command $command"))
-      } else {
-        val message = s"Local command $command returned exit code $exitCode"
-        if (raiseError) {
-          Sync[F].raiseError(new RuntimeException(message))
-        } else {
-          Sync[F].delay(logger.warn(message))
-        }
-      }
-    }
 }

@@ -69,6 +69,7 @@ object Command {
 }
 
 case class EventHooks(
+    onCardChange: Option[String], // TODO Implement
+    onInitialize: Option[String],
     onPlay: Option[String],
-    onStartup: Option[String]
 )

@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.2.0](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.7...v1.2.0) (2020-12-17)
+
+
+### Features
+
+* Add event hooks ([#1](https://github.com/scheleaap/rfid-jukebox/issues/1)) ([d3a970d](https://github.com/scheleaap/rfid-jukebox/commit/d3a970de55bd5d2bc5b65fa744fae432b973355d))
+
 ## [1.1.7](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.6...v1.1.7) (2020-11-18)
 
 

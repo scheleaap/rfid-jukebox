@@ -47,7 +47,8 @@ case class Config(
     spi: Spi,
     readInterval: FiniteDuration,
     albums: Map[Uid, MopidyUri],
-    commands: Map[Uid, Command]
+    commands: Map[Uid, Command],
+    hooks: Option[EventHooks]
 )
 
 case class Mopidy(
@@ -66,3 +67,13 @@ object Command {
   case object Shutdown extends Command
   case object Stop extends Command
 }
+
+case class EventHooks(
+    onCardChange: Option[String],
+    onInitialize: Option[String],
+    onPause: Option[String],
+    onPlay: Option[String],
+    onResume: Option[String],
+    onShutdown: Option[String],
+    onStop: Option[String]
+)

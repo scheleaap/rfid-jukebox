@@ -26,7 +26,7 @@ object Application extends TaskApp with StrictLogging {
         )
       }
 
-  private def createCardReader(config: Spi) = {
+  private def createCardReader(config: Spi): CardReader = {
     Mfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
 //    new TimeBasedReader()
 //    new FixedUidReader(
@@ -72,7 +72,7 @@ object Application extends TaskApp with StrictLogging {
       cardMapping: Map[Uid, Card],
       actionExecutor: ActionExecutor[Task],
       onCardChangeEventHook: Task[Unit]
-  ): Task[Long] = {
+  ): Task[Long] =
     cardReader
       .read()
       .delayOnNext(readInterval)
@@ -90,7 +90,6 @@ object Application extends TaskApp with StrictLogging {
       //  case _ => Left(())
       //})
       .countL
-  }
 
   private def physicalCardToLogicalCard(pco: Option[rfid.Card], cardMapping: Map[Uid, Card]): Card =
     pco

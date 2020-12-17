@@ -31,28 +31,40 @@ class ActionExecutor[F[_]: Sync: Parallel](eventHooks: Option[EventHooks], mopid
     }
 
   private def executePause: F[Unit] =
-    mopidyClient.pausePlayback()
-
-  private def executePlay(uri: MopidyUri): F[Unit] = {
     List(
-      eventHooks.flatMap(_.onPlay).fold(Sync[F].unit)(runCommand[F](raiseError = false)),
+      mopidyClient.pausePlayback(),
+      eventHooks.flatMap(_.onPause).fold(Sync[F].unit)(runCommand[F](raiseError = false))
+    ).parSequence
+      .as(())
+
+  private def executePlay(uri: MopidyUri): F[Unit] =
+    List(
       mopidyClient.clearTracklist() >>
         mopidyClient.addToTracklist(Seq(uri.value)) >>
-        mopidyClient.startPlayback()
+        mopidyClient.startPlayback(),
+      eventHooks.flatMap(_.onPlay).fold(Sync[F].unit)(runCommand[F](raiseError = false))
     ).parSequence
-      .map(_ => ())
-  }
+      .as(())
 
   private def executeResume: F[Unit] =
-    mopidyClient.resumePlayback()
+    List(
+      mopidyClient.resumePlayback(),
+      eventHooks.flatMap(_.onResume).fold(Sync[F].unit)(runCommand[F](raiseError = false))
+    ).parSequence
+      .as(())
 
   private def executeShutdown: F[Unit] =
-    runCommand(raiseError = true)("sudo shutdown now")
+    eventHooks.flatMap(_.onShutdown).fold(Sync[F].unit)(runCommand[F](raiseError = false)) >>
+      runCommand(raiseError = true)("sudo shutdown now")
 
   private def executeInitialize: F[Unit] =
     eventHooks.flatMap(_.onInitialize).fold(Sync[F].unit)(runCommand[F](raiseError = false))
 
   private def executeStop: F[Unit] =
-    mopidyClient.stopPlayback() >>
-      mopidyClient.clearTracklist()
+    List(
+      mopidyClient.stopPlayback() >>
+        mopidyClient.clearTracklist(),
+      eventHooks.flatMap(_.onStop).fold(Sync[F].unit)(runCommand[F](raiseError = false))
+    ).parSequence
+      .as(())
 }

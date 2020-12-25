@@ -1,15 +1,17 @@
 package info.maaskant.jukebox
 
-import info.maaskant.jukebox.Action.{Pause, Play, Resume, Initialize}
+import info.maaskant.jukebox.Action.{Initialize, Pause, Play, Resume}
 import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.State.{Paused, Playing, Stopped, Uninitialized}
 import info.maaskant.jukebox.mopidy.MopidyUri
+import info.maaskant.jukebox.rfid.Uid
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class StateMachineTest extends AnyFlatSpec with Matchers {
   private val album1 = Album(MopidyUri("album1"))
   private val album2 = Album(MopidyUri("album2"))
+  private val unknown = Card.Unknown(Uid("1"))
 
   "Uninitialized, any" should "Stopped, SignalReady" in {
     Uninitialized(Card.None) should be(Stopped, Some(Initialize))
@@ -24,7 +26,7 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   }
 
   "Stopped, unknown card" should "Stopped, None" in {
-    Stopped(Card.Unknown) should be(Stopped, None)
+    Stopped(unknown) should be(Stopped, None)
   }
 
   "Stopped, shutdown" should "Stopped, Shutdown" in {
@@ -48,7 +50,7 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   }
 
   "Playing, unknown card" should "Playing, None" in {
-    playing(album1)(Card.Unknown) should be(playing(album1), None)
+    playing(album1)(unknown) should be(playing(album1), None)
   }
 
   "Playing, shutdown" should "Playing, Shutdown" in {
@@ -72,7 +74,7 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   }
 
   "Paused, unknown card" should "Paused, None" in {
-    paused(album1)(Card.Unknown) should be(paused(album1), None)
+    paused(album1)(unknown) should be(paused(album1), None)
   }
 
   "Paused, shutdown" should "Paused, Shutdown" in {

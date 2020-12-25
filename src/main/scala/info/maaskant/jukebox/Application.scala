@@ -93,7 +93,7 @@ object Application extends TaskApp with StrictLogging {
 
   private def physicalCardToLogicalCard(pco: Option[rfid.Card], cardMapping: Map[Uid, Card]): Card =
     pco
-      .map(pc => cardMapping.getOrElse(pc.uid, Card.Unknown))
+      .map(pc => cardMapping.getOrElse(pc.uid, Card.Unknown(pc.uid)))
       .getOrElse(Card.None)
 
   private def resources(config: Config): Resource[Task, DefaultMopidyClient[Task]] =

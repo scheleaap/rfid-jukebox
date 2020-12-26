@@ -1,37 +1,32 @@
 package info.maaskant.jukebox
 
-import info.maaskant.jukebox.Action.{Pause, Play, Resume, Initialize}
+import info.maaskant.jukebox.Action.{Initialize, Pause, Play, Resume}
 import info.maaskant.jukebox.mopidy.MopidyUri
 
-case class State(playback: PlaybackState) {
-  def apply(input: Card): (State, Option[Action]) = {
-    val (playbackNew, playbackAction): (PlaybackState, Option[Action]) = playback.apply(input)
-    State(playbackNew) -> playbackAction
-  }
+sealed trait State {
+  def apply(input: Card): (State, Option[Action])
 }
 
-sealed trait PlaybackState {
-  def apply(input: Card): (PlaybackState, Option[Action])
-}
+object State {
 
-object PlaybackState {
-
-  case object Uninitialized extends PlaybackState {
-    override def apply(input: Card): (PlaybackState, Option[Action]) = Stopped -> Some(Initialize)
+  case object Uninitialized extends State {
+    override def apply(input: Card): (State, Option[Action]) =
+      Stopped -> Some(Initialize)
   }
 
-  case object Stopped extends PlaybackState {
-    override def apply(input: Card): (PlaybackState, Option[Action]) = input match {
+  case object Stopped extends State {
+    override def apply(input: Card): (State, Option[Action]) = input match {
       case Card.None => this -> None
       case _: Card.Unknown => this -> None
       case Card.Shutdown => this -> Some(Action.Shutdown)
       case Card.Stop => this -> None
-      case Card.Album(mopidyUri, shuffle, repeat) => Playing(mopidyUri) -> Some(Play(mopidyUri, shuffle, repeat))
+      case Card.Album(mopidyUri, shuffle, repeat) =>
+        Playing(mopidyUri) -> Some(Play(mopidyUri, shuffle, repeat))
     }
   }
 
-  case class Playing(currentUri: MopidyUri) extends PlaybackState {
-    override def apply(input: Card): (PlaybackState, Option[Action]) = input match {
+  case class Playing(currentUri: MopidyUri) extends State {
+    override def apply(input: Card): (State, Option[Action]) = input match {
       case Card.None => Paused(currentUri) -> Some(Pause)
       case Card.Shutdown => this -> Some(Action.Shutdown)
       case Card.Stop => Stopped -> Some(Action.Stop)
@@ -45,8 +40,8 @@ object PlaybackState {
     }
   }
 
-  case class Paused(lastUri: MopidyUri) extends PlaybackState {
-    override def apply(input: Card): (PlaybackState, Option[Action]) = input match {
+  case class Paused(lastUri: MopidyUri) extends State {
+    override def apply(input: Card): (State, Option[Action]) = input match {
       case Card.None => (Paused(lastUri), None)
       case Card.Shutdown => this -> Some(Action.Shutdown)
       case Card.Stop => Stopped -> Some(Action.Stop)

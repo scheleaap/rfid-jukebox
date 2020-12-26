@@ -3,14 +3,10 @@ package info.maaskant.jukebox
 import cats.effect.{ExitCode, Resource, Sync}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Card.Album
-import info.maaskant.jukebox.PlaybackState.Stopped
-import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyClient, MopidyUri}
-import info.maaskant.jukebox.rfid.{Mfrc522CardReader, Uid}
-import info.maaskant.jukebox.rfid.{CardReader, FixedUidReader, Mfrc522CardReader, Uid}
 import info.maaskant.jukebox.Process.runCommand
-import info.maaskant.jukebox.PlaybackState.Uninitialized
+import info.maaskant.jukebox.State.Uninitialized
 import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyUri}
-import info.maaskant.jukebox.rfid.{CardReader, Mfrc522CardReader, Uid}
+import info.maaskant.jukebox.rfid.{CardReader, FixedUidReader, Uid}
 import monix.eval.{Task, TaskApp}
 import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.model.Uri
@@ -18,7 +14,10 @@ import sttp.model.Uri
 import scala.concurrent.duration.FiniteDuration
 
 object Application extends TaskApp with StrictLogging {
-  private def createCardMapping(albums: Map[Uid, Either[MopidyUri, Config.Album]], commands: Map[Uid, Config.Command]): Map[Uid, Card] =
+  private def createCardMapping(
+      albums: Map[Uid, Either[MopidyUri, Config.Album]],
+      commands: Map[Uid, Config.Command]
+  ): Map[Uid, Card] =
     albums.map {
       case (uid, Left(uri)) => (uid, Album(uri, shuffle = false, repeat = false))
       case (uid, Right(album)) => (uid, Album(album.uri, shuffle = album.shuffle, repeat = album.repeat))
@@ -89,7 +88,7 @@ object Application extends TaskApp with StrictLogging {
         Task(logger.info(s"Logical card: $i")) >>
           onCardChangeEventHook
       )
-      .scanEval[PlaybackState](Task.pure(Uninitialized))(
+      .scanEval[State](Task.pure(Uninitialized))(
         updateStateAndExecuteAction(actionExecutor)
       )
       //.foldWhileLeftL(())((_, state) => state match {
@@ -112,7 +111,7 @@ object Application extends TaskApp with StrictLogging {
       )
     } yield mopidyClient
 
-  private def updateStateAndExecuteAction(actionExecutor: ActionExecutor[Task])(s0: PlaybackState, card: Card): Task[PlaybackState] = {
+  private def updateStateAndExecuteAction(actionExecutor: ActionExecutor[Task])(s0: State, card: Card): Task[State] = {
     val (s1, action0) = s0(card)
     action0 match {
       case None => Task.pure(s1)

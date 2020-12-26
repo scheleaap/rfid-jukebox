@@ -2,7 +2,7 @@ package info.maaskant.jukebox
 
 import info.maaskant.jukebox.Action.{Initialize, Pause, Play, Resume}
 import info.maaskant.jukebox.Card.Album
-import info.maaskant.jukebox.PlaybackState.{Paused, Playing, Stopped, Uninitialized}
+import info.maaskant.jukebox.State.{Paused, Playing, Stopped, Uninitialized}
 import info.maaskant.jukebox.mopidy.MopidyUri
 import info.maaskant.jukebox.rfid.Uid
 import org.scalatest.flatspec.AnyFlatSpec
@@ -18,23 +18,23 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
   }
 
   "Stopped, nothing" should "Stopped, None" in {
-    State(Stopped)(Card.None) should be(stopped, None)
+    stopped(Card.None) should be(stopped, None)
   }
 
   "Stopped, album" should "Playing, Play" in {
-    State(Stopped)(album1) should be(playing(album1), play(album1))
+    stopped(album1) should be(playing(album1), play(album1))
   }
 
   "Stopped, unknown card" should "Stopped, None" in {
-    State(Stopped)(unknown) should be(stopped, None)
+    stopped(unknown) should be(stopped, None)
   }
 
   "Stopped, shutdown" should "Stopped, Shutdown" in {
-    State(Stopped)(Card.Shutdown) should be(stopped, shutdown)
+    stopped(Card.Shutdown) should be(stopped, shutdown)
   }
 
   "Stopped, stop" should "Stopped, None" in {
-    State(Stopped)(Card.Stop) should be(stopped, None)
+    stopped(Card.Stop) should be(stopped, None)
   }
 
   "Playing, nothing" should "Paused, Pause" in {
@@ -87,11 +87,11 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
 
   private def pause: Some[Action.Pause.type] = Some(Pause)
 
-  private def paused(album: Album): State = State(Paused(album.mopidyUri))
+  private def paused(album: Album): State = Paused(album.mopidyUri)
 
   private def play(album: Album): Option[Play] = Some(Play(album.mopidyUri, album.shuffle, album.repeat))
 
-  private def playing(album: Album): State = State(Playing(album.mopidyUri))
+  private def playing(album: Album): State = Playing(album.mopidyUri)
 
   private def resume: Some[Action.Resume.type] = Some(Resume)
 
@@ -99,5 +99,5 @@ class StateMachineTest extends AnyFlatSpec with Matchers {
 
   private def stop: Some[Action.Stop.type] = Some(Action.Stop)
 
-  private def stopped: State = State(Stopped)
+  private def stopped: State = Stopped
 }

@@ -1,11 +1,9 @@
 package info.maaskant.jukebox
 
-import java.net.URI
-
 import cats.effect.Sync
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import info.maaskant.jukebox.Config.{Album, Command, Mopidy, Spi}
+import info.maaskant.jukebox.Config.{Album, Command, EventHooks, Mopidy, Spi}
 import info.maaskant.jukebox.mopidy.MopidyUri
 import info.maaskant.jukebox.rfid.Uid
 import pureconfig.ConfigReader.Result
@@ -16,6 +14,7 @@ import pureconfig.generic.auto._
 import pureconfig.generic.semiauto._
 import pureconfig.{ConfigCursor, ConfigReader, ConfigSource}
 
+import java.net.URI
 import scala.concurrent.duration.FiniteDuration
 
 case class Config(
@@ -23,10 +22,12 @@ case class Config(
     spi: Spi,
     readInterval: FiniteDuration,
     albums: Map[Uid, Either[MopidyUri, Album]],
-    commands: Map[Uid, Command]
+    commands: Map[Uid, Command],
+    hooks: Option[EventHooks]
 )
 
 object Config {
+
   case class Mopidy(
       baseUrl: URI
   )
@@ -45,6 +46,16 @@ object Config {
     case object Shutdown extends Command
     case object Stop extends Command
   }
+
+  case class EventHooks(
+      onCardChange: Option[String],
+      onInitialize: Option[String],
+      onPause: Option[String],
+      onPlay: Option[String],
+      onResume: Option[String],
+      onShutdown: Option[String],
+      onStop: Option[String]
+  )
 
   private implicit val commandConvert: ConfigReader[Command] = deriveEnumerationReader[Command]
 

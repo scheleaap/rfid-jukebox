@@ -2,7 +2,7 @@
 
 The jukebox allows you to use RFID tags to control [Mopidy](https://mopidy.com/) and play songs from Spotify (through the [Mopidy-Spotify plugin](https://github.com/mopidy/mopidy-spotify)). It runs on the Raspberry Pi.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/uSX4JkK0TmM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![The jukebox in action](http://img.youtube.com/vi/uSX4JkK0TmM/0.jpg)](http://www.youtube.com/watch?v=uSX4JkK0TmM "RFID Jukebox Demo")
 
 ## Features
 
@@ -13,6 +13,12 @@ The jukebox allows you to use RFID tags to control [Mopidy](https://mopidy.com/)
 * Smartphone based volume control
 * Support for [Spotify Connect](https://www.spotify.com/de/connect/)
 
+<img src="doc/resources/albums_scaled.jpg" alt="Albums" height="250">
+<img src="doc/resources/kitchen_scaled.jpg" alt="Kitchen jukebox" height="250">
+<img src="doc/resources/living-room_scaled.jpg" alt="Living room jukebox" height="250">
+<img src="https://raw.githubusercontent.com/jaedb/Iris/master/screenshot.jpg" alt="Modern, mobile-friendly UI" height="250">
+
+<img src="https://raw.githubusercontent.com/badaix/snapcast/master/doc/snapcast_android_scaled.png" alt="Volume control with Snapcast" height="250">
 
 ## Requirements
 
@@ -50,16 +56,20 @@ Be sure to check if the HAT you choose can provide and handle the power you need
 The jukebox consists of the following software components:
 * [Mopidy](https://mopidy.com/) with the following extensions:
   * [Mopidy-Spotify](https://mopidy.com/ext/spotify/)
-  * [Mopidy-Scrobbler](https://mopidy.com/ext/scrobbler/), to scrobble to [LastFM](https://www.last.fm/)
+  * [Mopidy-Scrobbler](https://mopidy.com/ext/scrobbler/), to scrobble to [Last.fm](https://www.last.fm/)
   * [Mopidy-Iris](https://mopidy.com/ext/iris/), mobile-friendly UI
 * [RFID Jukebox](https://github.com/scheleaap/rfid-jukebox) (this repository), which reads RFID tags and controls Mopidy
 * [Snapcast](https://github.com/badaix/snapcast) for synchronized, multi-room audio
+* [Snapcast Android client](https://play.google.com/store/apps/details?id=de.badaix.snapcast&hl=nl&gl=US) to control the volume
 * _(Experimental)_ [Raspotify](https://github.com/dtcooper/raspotify) as an alternative to stream music from the Spotify client directly. Currently, I am experiencing issues because the music is played back too fast.
 
 
 ### Installation
 
-I use Ansible to install and configure my Raspberry Pi's. You can adapt the playbook to your purposes: you need to change the host names and provide/change the variables.
+I use Ansible to install and configure my Raspberry Pi's.
+
+You can adapt the playbook to your purposes:
+you need to change the host names and provide/change the variables.
 
 [Playbook](https://github.com/scheleaap/home-infrastructure)
 

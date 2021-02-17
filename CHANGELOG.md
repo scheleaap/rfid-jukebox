@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/scheleaap/rfid-jukebox/compare/v1.2.0...v1.2.1) (2021-02-17)
+
+
+### Bug Fixes
+
+* Distinguish different unknown cards and log their UID ([2ab3801](https://github.com/scheleaap/rfid-jukebox/commit/2ab3801585a2b3786bb6eef3b05264a84f2d9d8c))
+
 # [1.2.0](https://github.com/scheleaap/rfid-jukebox/compare/v1.1.7...v1.2.0) (2020-12-17)
 
 

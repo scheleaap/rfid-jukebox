@@ -84,7 +84,7 @@ The playbook uses several roles I wrote:
 
 ## Similar Projects
 
-[Diskplayer: Using 3.5" floppy disks to play albums on Spotify](https://www.dinofizzotti.com/blog/2020-02-05-diskplayer-using-3.5-floppy-disks-to-play-albums-on-spotify/)
-[Pi MusicBox](https://www.pimusicbox.com/)
-[Phoniebox](http://phoniebox.de/index-en.html)
-[TonUINO](https://www.voss.earth/tonuino/) (German language only)
+* [Diskplayer: Using 3.5" floppy disks to play albums on Spotify](https://www.dinofizzotti.com/blog/2020-02-05-diskplayer-using-3.5-floppy-disks-to-play-albums-on-spotify/)
+* [Pi MusicBox](https://www.pimusicbox.com/)
+* [Phoniebox](http://phoniebox.de/index-en.html)
+* [TonUINO](https://www.voss.earth/tonuino/) (German language only)

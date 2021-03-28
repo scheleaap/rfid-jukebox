@@ -56,7 +56,7 @@ case class ModifiedMfrc522CardReader private (controller: Int, chipSelect: Int, 
             logger.trace("Could not read card UID")
             Left(TemporaryError)
           }
-        case Right(_ /* matches TRUE, null */ ) =>
+        case Right(_ /* matches FALSE, null */ ) =>
           logger.trace("No card present")
           Right(None)
         case Left(statusCode) =>

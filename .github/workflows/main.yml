@@ -1,22 +1,22 @@
 name: Main
 on: [push]
 jobs:
-  compile-test-package:
-    name: Compile, test, package
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Clone repository
-        uses: actions/checkout@v2
-      - name: Set up JDK
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-      - name: Compile, test and package
-        run: sbt compile test:test debian:packageBin
+#  compile-test-package:
+#    name: Compile, test, package
+#    runs-on: ubuntu-20.04
+#    steps:
+#      - name: Clone repository
+#        uses: actions/checkout@v2
+#      - name: Set up JDK
+#        uses: actions/setup-java@v1
+#        with:
+#          java-version: 11
+#      - name: Compile, test and package
+#        run: sbt compile test:test debian:packageBin
   release:
     name: Release
     runs-on: ubuntu-20.04
-    needs: compile-test-package
+#    needs: compile-test-package
 #    if: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - name: Set up Node
@@ -32,4 +32,6 @@ jobs:
           @semantic-release/git \
           @semantic-release/release-notes-generator
       - name: Create a release
-        run: semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

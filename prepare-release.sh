@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+exit 123
+
 usage() {
     cat <<EOM
     Usage:

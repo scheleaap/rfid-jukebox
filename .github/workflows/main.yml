@@ -1,8 +1,9 @@
-#name: main
+name: Main
 on: [push]
 jobs:
-  check-bats-version:
-    runs-on: ubuntu-latest
+  compile-test-package:
+    name: Compile, test, package
+    runs-on: ubuntu-20.04
     steps:
       - name: Clone repository
         uses: actions/checkout@v2
@@ -11,8 +12,24 @@ jobs:
         with:
           java-version: 11
       - name: Compile, test and package
-        run: sbt test:test debian:packageBin
-
-#      - uses: actions/setup-node@v1
-#      - run: npm install -g bats
-#      - run: bats -v
+        run: sbt compile test:test debian:packageBin
+  release:
+    name: Release
+    runs-on: ubuntu-20.04
+    needs: compile-test-package
+#    if: ${{ github.ref == 'refs/heads/master' }}
+    steps:
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release \
+          @semantic-release/changelog \
+          @semantic-release/commit-analyzer \
+          @semantic-release/exec \
+          @semantic-release/git \
+          @semantic-release/release-notes-generator
+      - name: Create a release
+        run: semantic-release

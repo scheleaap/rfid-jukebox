@@ -19,7 +19,10 @@ jobs:
 #    needs: compile-test-package
 #    if: ${{ github.ref == 'refs/heads/master' }}
     steps:
-      - run: cat .git/config
+      - run: |
+          pwd
+          find .
+          cat .git/config
 #      - name: Set up Node
 #        uses: actions/setup-node@v2
 #        with:

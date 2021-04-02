@@ -1,19 +1,18 @@
 package info.maaskant.jukebox.rfid
 
-import java.io.IOException
-
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.MFRC522
 import info.maaskant.jukebox.MFRC522.StatusCode
-import info.maaskant.jukebox.rfid.Mfrc522CardReader.ReadError
-import info.maaskant.jukebox.rfid.Mfrc522CardReader.ReadError.{PermanentError, TemporaryError, UnknownError}
+import info.maaskant.jukebox.rfid.ModifiedMfrc522CardReader.ReadError
+import info.maaskant.jukebox.rfid.ModifiedMfrc522CardReader.ReadError.{PermanentError, TemporaryError, UnknownError}
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
 
+import java.io.IOException
 import scala.util.Try
 
-case class Mfrc522CardReader private (controller: Int, chipSelect: Int, resetGpio: Int)
+case class ModifiedMfrc522CardReader private (controller: Int, chipSelect: Int, resetGpio: Int)
     extends CardReader
     with StrictLogging {
 
@@ -57,7 +56,7 @@ case class Mfrc522CardReader private (controller: Int, chipSelect: Int, resetGpi
             logger.trace("Could not read card UID")
             Left(TemporaryError)
           }
-        case Right(java.lang.Boolean.FALSE) =>
+        case Right(_ /* matches FALSE, null */ ) =>
           logger.trace("No card present")
           Right(None)
         case Left(statusCode) =>
@@ -75,7 +74,7 @@ case class Mfrc522CardReader private (controller: Int, chipSelect: Int, resetGpi
   }
 }
 
-object Mfrc522CardReader {
+object ModifiedMfrc522CardReader {
   sealed trait ReadError
 
   object ReadError {

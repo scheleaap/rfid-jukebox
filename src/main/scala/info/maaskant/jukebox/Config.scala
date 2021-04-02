@@ -44,8 +44,9 @@ object Config {
 
 case class Config(
     mopidy: Mopidy,
-    spi: Spi,
+    reader: String,
     readInterval: FiniteDuration,
+    spi: Spi,
     albums: Map[Uid, MopidyUri],
     commands: Map[Uid, Command],
     hooks: Option[EventHooks]

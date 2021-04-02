@@ -6,7 +6,14 @@ import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.Process.runCommand
 import info.maaskant.jukebox.State.Uninitialized
 import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyUri}
-import info.maaskant.jukebox.rfid.{CardReader, Mfrc522CardReader, Uid}
+import info.maaskant.jukebox.rfid.{
+  CardReader,
+  FixedUidReader,
+  ModifiedMfrc522CardReader,
+  OriginalMfrc522CardReader,
+  TimeBasedReader,
+  Uid
+}
 import monix.eval.{Task, TaskApp}
 import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.model.Uri
@@ -26,20 +33,22 @@ object Application extends TaskApp with StrictLogging {
         )
       }
 
-  private def createCardReader(config: Spi): CardReader = {
-    Mfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
-//    new TimeBasedReader()
-//    new FixedUidReader(
-//      IndexedSeq(
-//        None,
-//        Some(Uid("ebd1a421")),
-//        Some(Uid("ebd1a421")),
-//        Some(Uid("ebd1a421")),
-//        Some(Uid("042abc4a325e81")),
-//        Some(Uid("042ebc4a325e81")),
-//        Some(Uid("TODO"))
-//      )
-//    )
+  private def createCardReader(reader: String, config: Spi): CardReader = reader match {
+    case "modified" => ModifiedMfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
+    case "time-based" => new TimeBasedReader()
+    case "fixed-uid" =>
+      new FixedUidReader(
+        IndexedSeq(
+          None,
+          Some(Uid("ebd1a421")),
+          Some(Uid("ebd1a421")),
+          Some(Uid("ebd1a421")),
+          Some(Uid("042abc4a325e81")),
+          Some(Uid("042ebc4a325e81")),
+          Some(Uid("TODO"))
+        )
+      )
+    case _ => OriginalMfrc522CardReader(config.controller, config.chipSelect, config.resetGpio)
   }
 
   override def run(args: List[String]): Task[ExitCode] =
@@ -48,7 +57,7 @@ object Application extends TaskApp with StrictLogging {
       _ <- Task(logger.info(s"Configuration: $config"))
       exitCode <- resources(config)
         .use { mopidyClient =>
-          val cardReader = createCardReader(config.spi)
+          val cardReader = createCardReader(config.reader, config.spi)
           val cardMapping: Map[Uid, Card] = createCardMapping(config.albums, config.commands)
           val actionExecutor = new ActionExecutor(config.hooks, mopidyClient)
           val onCardChangeEventHook = config.hooks

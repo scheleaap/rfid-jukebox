@@ -1,0 +1,46 @@
+name: Main
+on: [push]
+jobs:
+  compile-test-package:
+    name: Compile, test, package
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Compile, test and package
+        run: sbt compile test:test debian:packageBin
+  release:
+    name: Release
+    runs-on: ubuntu-20.04
+    needs: compile-test-package
+    if: ${{ github.ref == 'refs/heads/master' }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - run: |
+          pwd
+          find .
+          cat .git/config
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+      # Based on:
+      # https://hodgkins.io/automating-semantic-versioning
+      # https://semantic-release.gitbook.io/semantic-release/recipes/recipes/travis#non-node-js-projects-configuration
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release \
+          @semantic-release/changelog \
+          @semantic-release/commit-analyzer \
+          @semantic-release/exec \
+          @semantic-release/git \
+          @semantic-release/release-notes-generator
+      - name: Create a release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

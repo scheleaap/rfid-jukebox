@@ -19,23 +19,25 @@ jobs:
 #    needs: compile-test-package
 #    if: ${{ github.ref == 'refs/heads/master' }}
     steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
       - run: |
           pwd
           find .
           cat .git/config
-#      - name: Set up Node
-#        uses: actions/setup-node@v2
-#        with:
-#          node-version: "14"
-#      - name: Install semantic-release
-#        run: |
-#          npm install -g semantic-release \
-#          @semantic-release/changelog \
-#          @semantic-release/commit-analyzer \
-#          @semantic-release/exec \
-#          @semantic-release/git \
-#          @semantic-release/release-notes-generator
-#      - name: Create a release
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: npx semantic-release
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release \
+          @semantic-release/changelog \
+          @semantic-release/commit-analyzer \
+          @semantic-release/exec \
+          @semantic-release/git \
+          @semantic-release/release-notes-generator
+      - name: Create a release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/scheleaap/rfid-jukebox/compare/v1.2.1...v1.2.2) (2021-04-02)
+
+
+### Bug Fixes
+
+* Improve RFID reading robustness ([be3133d](https://github.com/scheleaap/rfid-jukebox/commit/be3133d98a5d3682f678d92b11a0a5def7bb3e88))
+* Provide ability to switch between original and modified MFRC522 reader ([41c0866](https://github.com/scheleaap/rfid-jukebox/commit/41c0866f0006fcb11971e4cb5c622981171e93ff))
+
 ## [1.2.1](https://github.com/scheleaap/rfid-jukebox/compare/v1.2.0...v1.2.1) (2021-02-17)
 
 

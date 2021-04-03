@@ -1,4 +1,4 @@
-# RFID Jukebox [![Build Status](https://travis-ci.com/scheleaap/rfid-jukebox.svg?branch=master)](https://travis-ci.com/scheleaap/rfid-jukebox)
+# RFID Jukebox [![Build Status](https://github.com/scheleaap/rfid-jukebox/actions/workflows/main.yml/badge.svg)](https://github.com/scheleaap/rfid-jukebox/actions/workflows/main.yml)
 
 The jukebox allows you to use RFID tags to control [Mopidy](https://mopidy.com/) and play songs from Spotify (through the [Mopidy-Spotify plugin](https://github.com/mopidy/mopidy-spotify)). It runs on the Raspberry Pi.
 

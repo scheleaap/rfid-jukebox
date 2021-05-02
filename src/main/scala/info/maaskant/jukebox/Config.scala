@@ -47,6 +47,7 @@ case class Config(
     reader: String,
     readInterval: FiniteDuration,
     spi: Spi,
+    streamPauseTimeout: FiniteDuration,
     albums: Map[Uid, MopidyUri],
     commands: Map[Uid, Command],
     hooks: Option[EventHooks]

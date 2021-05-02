@@ -4,7 +4,6 @@ import cats.effect.{ExitCode, Resource, Sync}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.Process.runCommand
-import info.maaskant.jukebox.State.Uninitialized
 import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyUri}
 import info.maaskant.jukebox.rfid.{
   CardReader,
@@ -59,6 +58,7 @@ object Application extends TaskApp with StrictLogging {
         .use { mopidyClient =>
           val cardReader = createCardReader(config.reader, config.spi)
           val cardMapping: Map[Uid, Card] = createCardMapping(config.albums, config.commands)
+          val stateMachine = StateMachine(config.streamPauseTimeout)
           val actionExecutor = new ActionExecutor(config.hooks, mopidyClient)
           val onCardChangeEventHook = config.hooks
             .flatMap(_.onCardChange)
@@ -68,6 +68,7 @@ object Application extends TaskApp with StrictLogging {
             cardReader,
             config.readInterval,
             cardMapping,
+            stateMachine,
             actionExecutor,
             onCardChangeEventHook
           ).map(_ => ExitCode.Success)
@@ -79,6 +80,7 @@ object Application extends TaskApp with StrictLogging {
       cardReader: CardReader,
       readInterval: FiniteDuration,
       cardMapping: Map[Uid, Card],
+      stateMachine: StateMachine,
       actionExecutor: ActionExecutor[Task],
       onCardChangeEventHook: Task[Unit]
   ): Task[Long] =
@@ -91,7 +93,7 @@ object Application extends TaskApp with StrictLogging {
         Task(logger.info(s"Logical card: $i")) >>
           onCardChangeEventHook
       )
-      .scanEval[State](Task.pure(Uninitialized))(
+      .scanEval[StateMachine#State](Task.pure(stateMachine.Uninitialized))(
         updateStateAndExecuteAction(actionExecutor)
       )
       //.foldWhileLeftL(())((_, state) => state match {
@@ -114,7 +116,9 @@ object Application extends TaskApp with StrictLogging {
       )
     } yield mopidyClient
 
-  private def updateStateAndExecuteAction(actionExecutor: ActionExecutor[Task])(s0: State, card: Card): Task[State] = {
+  private def updateStateAndExecuteAction(
+      actionExecutor: ActionExecutor[Task]
+  )(s0: StateMachine#State, card: Card): Task[StateMachine#State] = {
     val (s1, action0) = s0(card)
     action0 match {
       case None => Task.pure(s1)

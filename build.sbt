@@ -1,8 +1,16 @@
-name := "rfid-jukebox"
+Global / onChangedBuildSource := ReloadOnSourceChanges
 
 ThisBuild / scalaVersion := "2.13.5"
 
-Global / onChangedBuildSource := ReloadOnSourceChanges
+ThisBuild / javacOptions ++= Seq(
+  "-source",
+  "1.8",
+  "-target",
+  "1.8",
+  "-Xlint"
+)
+
+ThisBuild / scalacOptions ++= ScalacOptions.scalac213Options
 
 ThisBuild / libraryDependencies ++= {
   val sttpClient = "2.2.9"
@@ -25,17 +33,6 @@ ThisBuild / libraryDependencies ++= {
   )
 }
 
-javacOptions ++= Seq(
-  "-source", "1.8",
-  "-target", "1.8",
-  "-Xlint"
-)
-
-scalacOptions ++= Seq(
-  "-deprecation",
-  "-language:higherKinds",
-)
-
 // Packaging
 enablePlugins(
   JavaServerAppPackaging,
@@ -43,10 +40,10 @@ enablePlugins(
   DebianPlugin
 )
 
-maintainer in Linux := "scheleaap"
+Linux / maintainer := "scheleaap"
 
-packageSummary in Linux := "RFID Jukebox"
+Linux / packageSummary := "RFID Jukebox"
 
-packageDescription := "An RFID-based jukebox client for Mopidy with Spotify"
+Linux / packageDescription := "An RFID-based jukebox client for Mopidy with Spotify"
 
-debianPackageDependencies in Debian := Seq("openjdk-8-jre-headless")
+Debian / debianPackageDependencies := Seq("openjdk-8-jre-headless")

@@ -1,28 +1,27 @@
 name := "rfid-jukebox"
 
-scalaVersion := "2.13.3"
+ThisBuild / scalaVersion := "2.13.5"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-libraryDependencies ++= {
-  val sttpClient = "2.0.0-RC5"
+ThisBuild / libraryDependencies ++= {
+  val sttpClient = "2.2.9"
+  val tinylog = "2.3.1"
   Seq(
     "com.diozero" % "diozero-core" % "0.14",
-    "com.github.pureconfig" %% "pureconfig" % "0.14.0",
+    "com.github.pureconfig" %% "pureconfig" % "0.15.0",
     "com.softwaremill.sttp.client" %% "core" % sttpClient,
     "com.softwaremill.sttp.client" %% "play-json" % sttpClient,
     "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % sttpClient, // TODO Replace with httpclient-backend below once it contains Monix support
     //"com.softwaremill.sttp.client" %% "httpclient-backend" % sttpClient,
     "io.monix" %% "monix" % "3.3.0",
-
     // Logging
-    "org.tinylog" % "tinylog-api" % "2.2.0",
-    "org.tinylog" % "tinylog-impl" % "2.2.0",
-    "org.tinylog" % "slf4j-tinylog" % "2.2.0",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-
+    "org.tinylog" % "tinylog-api" % tinylog,
+    "org.tinylog" % "tinylog-impl" % tinylog,
+    "org.tinylog" % "slf4j-tinylog" % tinylog,
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3",
     // Testing
-    "org.scalatest" %% "scalatest" % "3.2.3" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.8" % "test"
   )
 }
 

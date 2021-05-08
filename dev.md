@@ -8,6 +8,8 @@ Synchronizing the code to a Raspberry Pi for development purposes:
 echo 'version := "0.0.1-SNAPSHOT"' > version.sbt && sbt debian:packageBin && rsync -aPv ~/dev/rfid-jukebox/target/rfid-jukebox-0.0.1-SNAPSHOT/usr/share/rfid-jukebox/ pi@framboos:~/rfid-jukebox-tmp
 ```
 
+Note: Java 11 won't work on a Raspberry Pi Zero.
+
 To install Java 11 on Raspberry Pi (not required):
 ```shell script
 # Java

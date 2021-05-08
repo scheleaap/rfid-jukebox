@@ -1,7 +1,6 @@
 package info.maaskant.jukebox
 
 import java.net.URI
-
 import cats.effect.Sync
 import cats.syntax.flatMap._
 import cats.syntax.functor._
@@ -14,14 +13,17 @@ import pureconfig.generic.auto._
 import pureconfig.generic.semiauto._
 import pureconfig.{ConfigReader, ConfigSource}
 
+import scala.annotation.nowarn
 import scala.concurrent.duration.FiniteDuration
 
 object Config {
   private implicit val commandConvert: ConfigReader[Command] = deriveEnumerationReader[Command]
 
+  @nowarn
   private implicit val albumMapReader: ConfigReader[Map[Uid, MopidyUri]] =
     genericMapReader[Uid, MopidyUri](catchReadError(Uid.apply))
 
+  @nowarn
   private implicit val commandMapReader: ConfigReader[Map[Uid, Command]] =
     genericMapReader[Uid, Command](catchReadError(Uid.apply))
 

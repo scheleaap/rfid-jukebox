@@ -9,8 +9,8 @@ import sttp.client._
 import sttp.client.playJson._
 import sttp.model.Uri
 
-class DefaultMopidyClient[F[_]] private (rpcEndpoint: Uri)(
-    implicit F: Sync[F],
+class DefaultMopidyClient[F[_]] private (rpcEndpoint: Uri)(implicit
+    F: Sync[F],
     sttpBackend: SttpBackend[F, Nothing, NothingT]
 ) extends MopidyClient[F]
     with StrictLogging {

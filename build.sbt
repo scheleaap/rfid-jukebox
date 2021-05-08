@@ -46,4 +46,4 @@ Linux / packageSummary := "RFID Jukebox"
 
 Linux / packageDescription := "An RFID-based jukebox client for Mopidy with Spotify"
 
-Debian / debianPackageDependencies := Seq("openjdk-8-jre-headless")
+Debian / debianPackageDependencies := Seq("openjdk-11-jre-headless")

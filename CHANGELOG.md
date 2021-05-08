@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/scheleaap/rfid-jukebox/compare/v1.3.1...v1.3.2) (2021-05-08)
+
+
+### Bug Fixes
+
+* Revert back to OpenJDK 8 ([c15de04](https://github.com/scheleaap/rfid-jukebox/commit/c15de044db7466e158dbac038f67020b237016c3))
+
 ## [1.3.1](https://github.com/scheleaap/rfid-jukebox/compare/v1.3.0...v1.3.1) (2021-05-08)
 
 

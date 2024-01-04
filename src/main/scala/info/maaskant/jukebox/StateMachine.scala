@@ -54,7 +54,7 @@ case class StateMachine(streamPauseTimeout: FiniteDuration) {
                                   Duration
                                     .between(since, Instant.now(clock))
                                     .abs()
-                                    .toSeconds < streamPauseTimeout.toSeconds
+                                    .toMillis < streamPauseTimeout.toMillis
                                 else true)
         ) {
           Playing(newUri) -> Some(Resume)

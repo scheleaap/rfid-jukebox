@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.3.2](https://github.com/scheleaap/rfid-jukebox/compare/v1.3.1...v1.3.2) (2021-05-08)
+
+
+### Bug Fixes
+
+* Revert back to OpenJDK 8 ([c15de04](https://github.com/scheleaap/rfid-jukebox/commit/c15de044db7466e158dbac038f67020b237016c3))
+
+## [1.3.1](https://github.com/scheleaap/rfid-jukebox/compare/v1.3.0...v1.3.1) (2021-05-08)
+
+
+### Bug Fixes
+
+* Replace dependency on OpenJDK 8 with 11 ([c25bbfe](https://github.com/scheleaap/rfid-jukebox/commit/c25bbfeaf35290f1ed2dc6d3347a75818b292c13))
+
+# [1.3.0](https://github.com/scheleaap/rfid-jukebox/compare/v1.2.2...v1.3.0) (2021-05-02)
+
+
+### Features
+
+* Restart stream after a pause ([30e778c](https://github.com/scheleaap/rfid-jukebox/commit/30e778c142e056aea2551fa9caabb84a9328b8fc))
+
 ## [1.2.2](https://github.com/scheleaap/rfid-jukebox/compare/v1.2.1...v1.2.2) (2021-04-02)
 
 

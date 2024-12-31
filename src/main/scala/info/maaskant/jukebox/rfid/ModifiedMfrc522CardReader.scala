@@ -1,47 +1,40 @@
 package info.maaskant.jukebox.rfid
 
+import cats.effect.{IO, Resource}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.MFRC522
 import info.maaskant.jukebox.MFRC522.StatusCode
 import info.maaskant.jukebox.rfid.ModifiedMfrc522CardReader.ReadError
 import info.maaskant.jukebox.rfid.ModifiedMfrc522CardReader.ReadError.{PermanentError, TemporaryError, UnknownError}
-import monix.eval.Task
-import monix.execution.Scheduler
-import monix.reactive.Observable
 
 import java.io.IOException
 import scala.util.Try
 
 case class ModifiedMfrc522CardReader private (controller: Int, chipSelect: Int, resetGpio: Int)
-    extends CardReader
+    extends CardReader[MFRC522]
     with StrictLogging {
 
-  private val scheduler = Scheduler.singleThread("mfrc522")
+  override def resource(): Resource[IO, MFRC522] =
+    Resource.make(
+      IO(logger.debug("Opening RFID reader")) >>
+        IO(new MFRC522(controller, chipSelect, resetGpio))
+    )(reader =>
+      IO(logger.debug("Closing RFID reader")) >>
+        IO(reader.close())
+    )
 
-  def read(): Observable[Option[Card]] = {
-    Observable
-      .resource {
-        Task(logger.debug("Opening RFID reader")) >>
-          Task(new MFRC522(controller, chipSelect, resetGpio))
-      } { reader =>
-        Task(logger.debug("Closing RFID reader")) >>
-          Task(reader.close())
-      }
-      .flatMap { reader => Observable.repeatEval(read(reader)) }
+  def read(reader: MFRC522): IO[Option[Card]] =
+    IO(unsafeRead(reader))
       .flatMap {
         case Left(PermanentError) =>
           val message = "Permanent card reader error"
           logger.warn(message)
-          Observable.raiseError(new IOException(message))
-        case Left(_) => Observable.pure(None)
-        case Right(i) => Observable.pure(i)
+          IO.raiseError(new IOException(message))
+        case Left(_) => IO.pure(None)
+        case Right(i) => IO.pure(i)
       }
-      .onErrorRestart(2)
-      .subscribeOn(scheduler)
-      .executeOn(scheduler, forceAsync = false)
-  }
 
-  private def read(reader: MFRC522): Either[ReadError, Option[Card]] = {
+  private def unsafeRead(reader: MFRC522): Either[ReadError, Option[Card]] = {
     Try {
       logger.trace("Checking if a card is present")
       reader.isNewCardPresent2 match {

@@ -1,7 +1,9 @@
 package info.maaskant.jukebox.rfid
 
-import monix.reactive.Observable
+import cats.effect.{IO, Resource}
 
-trait CardReader {
-  def read(): Observable[Option[Card]]
+trait CardReader[R] {
+  def resource(): Resource[IO, R]
+
+  def read(resources: R): IO[Option[Card]]
 }

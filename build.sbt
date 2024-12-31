@@ -20,9 +20,10 @@ ThisBuild / libraryDependencies ++= {
     "com.github.pureconfig" %% "pureconfig" % "0.17.8",
     "com.softwaremill.sttp.client" %% "core" % sttpClient,
     "com.softwaremill.sttp.client" %% "play-json" % sttpClient,
-    "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % sttpClient, // TODO Replace with httpclient-backend below once it contains Monix support
+//    "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % sttpClient, // TODO Replace with httpclient-backend below once it contains Monix support
     //"com.softwaremill.sttp.client" %% "httpclient-backend" % sttpClient,
-    "io.monix" %% "monix" % "3.4.1",
+//    "io.monix" %% "monix" % "3.4.1",
+    "org.typelevel" %% "cats-effect" % "3.5.7",
     // Logging
     "org.tinylog" % "tinylog-api" % tinylog,
     "org.tinylog" % "tinylog-impl" % tinylog,

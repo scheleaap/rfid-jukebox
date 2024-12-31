@@ -5,8 +5,17 @@ import cats.effect.{ExitCode, IO, IOApp, Resource, Sync}
 import com.typesafe.scalalogging.StrictLogging
 import info.maaskant.jukebox.Card.Album
 import info.maaskant.jukebox.Process.runCommand
+import info.maaskant.jukebox.StateMachine.Uninitialized
 import info.maaskant.jukebox.mopidy.{DefaultMopidyClient, MopidyUri}
-import info.maaskant.jukebox.rfid.{CardReader, FixedUidReader, ModifiedMfrc522CardReader, OriginalMfrc522CardReader, TimeBasedReader, Uid}
+import info.maaskant.jukebox.rfid.{
+  Card => PhysicalCard,
+  CardReader,
+  FixedUidReader,
+  ModifiedMfrc522CardReader,
+  OriginalMfrc522CardReader,
+  TimeBasedReader,
+  Uid
+}
 import sttp.model.Uri
 
 import scala.annotation.tailrec
@@ -65,7 +74,7 @@ object Application extends IOApp with StrictLogging {
 //            actionExecutor,
 //            onCardChangeEventHook
 //          )
-          pipeline()
+          pipeline(cardReader, ???, stateMachine)
             .map(_ => ExitCode.Success)
         }
         .onError(t => IO(logger.error("Fatal error", t)).map(_ => ExitCode.Error))
@@ -97,45 +106,70 @@ object Application extends IOApp with StrictLogging {
 //      //})
 //      .countL
 
-  private def readPhysicalCard(): IO[Option[rfid.Card]] = ???
-//  private def processRead(state: ProcessingState, in: Option[rfid.Card]): IO[ProcessingState] = ???
+  private val ActiveReadInterval = 1.second // TODO Make configurable or constant
+  private val MaxReadInterval = 30.seconds // TODO Make configurable or constant
+  private val NoCardReadCountBeforeBackoff = 10 // TODO Make configurable or constant
+  private val BackoffFactor = 2 // TODO Make configurable or constant
 
-  case class CardReadingState(
-      previousCard: Option[rfid.Card],
-      noCardReadCount: Int,
-      readInterval: FiniteDuration
+  private case class ReadIntervalState(noCardReadCount: Int, readInterval: FiniteDuration)
+
+  private def calculateReadInterval(oldState: ReadIntervalState, card: Card): (ReadIntervalState, FiniteDuration) = {
+    val newState = card match {
+      case Card.None =>
+        // TODO Make MaxReadInterval dependent on hour of day
+        if (oldState.noCardReadCount < NoCardReadCountBeforeBackoff) {
+          ReadIntervalState(oldState.noCardReadCount + 1, oldState.readInterval)
+        } else {
+          ReadIntervalState(0, (oldState.readInterval * BackoffFactor).min(MaxReadInterval))
+        }
+      case _ => ReadIntervalState(0, ActiveReadInterval)
+    }
+    (newState, newState.readInterval)
+  }
+
+  private case class IterationState(
+      previousCard: Card,
+      readIntervalState: ReadIntervalState,
+      stateMachineState: StateMachine#State
   )
-  val ActiveReadInterval = 1.second // TODO Make configurable or constant
-  val MaxReadInterval = 30.seconds // TODO Make configurable or constant
-  val NoCardReadCountBeforeBackoff = 10 // TODO Make configurable or constant
-  val BackoffFactor = 2 // TODO Make configurable or constant
 
-  private def singleIteration(state: CardReadingState): IO[CardReadingState] = {
+  private def singleIteration(
+      oldState: IterationState,
+      readPhysicalCard: () => IO[Option[PhysicalCard]]
+  ): IO[IterationState] = {
     for {
-      card <- readPhysicalCard()
-      hasReadResultChanged = card != state.previousCard
-      newState = card match {
-        case Some(_) => CardReadingState(card, 0, ActiveReadInterval)
-        case None =>
-          if (state.noCardReadCount < NoCardReadCountBeforeBackoff) {
-            CardReadingState(card, state.noCardReadCount + 1, state.readInterval)
-          } else {
-            CardReadingState(card, 0, (state.readInterval * BackoffFactor).min(MaxReadInterval))
-          }
-      }
-      _ <- IO.sleep(newState.readInterval)
-    } yield newState
+      physicalCardOption <- readPhysicalCard()
+      logicalCard = physicalCardToLogicalCard(physicalCardOption, ???)
+      (newReadIntervalState, sleepDuration) = calculateReadInterval(oldState.readIntervalState, logicalCard)
+      passToStateMachine = oldState.previousCard != logicalCard
+      newStateMachineState <-
+        if (passToStateMachine) {
+          updateStateAndExecuteAction(???)(oldState.stateMachineState, logicalCard)
+        } else { IO.pure(oldState.stateMachineState) }
+      _ <- IO.sleep(sleepDuration)
+    } yield IterationState(logicalCard, newReadIntervalState, newStateMachineState)
   }
 
-  private def infiniteIteration(oldState: CardReadingState): IO[CardReadingState] =
-    singleIteration(oldState).flatMap(newState => infiniteIteration(newState))
+  private def infiniteIteration(
+      oldState: IterationState,
+      readPhysicalCard: () => IO[Option[PhysicalCard]]
+  ): IO[IterationState] =
+    singleIteration(oldState, readPhysicalCard).flatMap(newState => infiniteIteration(newState, readPhysicalCard))
 
-  private def pipeline() = {
-    val initialState :CardReadingState= ???
-    infiniteIteration(initialState)
+  private def pipeline[R](
+      cardReader: CardReader[R],
+      cardReaderResource: R,
+      stateMachine: StateMachine
+  ): IO[IterationState] = {
+    val initialState: IterationState = IterationState(
+      previousCard = Card.None,
+      readIntervalState = ReadIntervalState(noCardReadCount = 0, readInterval = ActiveReadInterval),
+      stateMachineState = stateMachine.Uninitialized
+    )
+    infiniteIteration(oldState = initialState, readPhysicalCard = () => cardReader.read(cardReaderResource))
   }
 
-  private def physicalCardToLogicalCard(pco: Option[rfid.Card], cardMapping: Map[Uid, Card]): Card =
+  private def physicalCardToLogicalCard(pco: Option[PhysicalCard], cardMapping: Map[Uid, Card]): Card =
     pco
       .map(pc => cardMapping.getOrElse(pc.uid, Card.Unknown(pc.uid)))
       .getOrElse(Card.None)

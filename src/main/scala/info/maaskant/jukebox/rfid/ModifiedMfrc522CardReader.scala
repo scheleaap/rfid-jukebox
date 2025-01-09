@@ -10,20 +10,10 @@ import info.maaskant.jukebox.rfid.ModifiedMfrc522CardReader.ReadError.{Permanent
 import java.io.IOException
 import scala.util.Try
 
-case class ModifiedMfrc522CardReader private (controller: Int, chipSelect: Int, resetGpio: Int)
-    extends CardReader[MFRC522]
-    with StrictLogging {
+case class ModifiedMfrc522CardReader private(reader: MFRC522)
+  extends CardReader with StrictLogging {
 
-  override def resource(): Resource[IO, MFRC522] =
-    Resource.make(
-      IO(logger.debug("Opening RFID reader")) >>
-        IO(new MFRC522(controller, chipSelect, resetGpio))
-    )(reader =>
-      IO(logger.debug("Closing RFID reader")) >>
-        IO(reader.close())
-    )
-
-  def read(reader: MFRC522): IO[Option[Card]] =
+  def read(): IO[Option[Card]] =
     IO(unsafeRead(reader))
       .flatMap {
         case Left(PermanentError) =>
@@ -49,7 +39,7 @@ case class ModifiedMfrc522CardReader private (controller: Int, chipSelect: Int, 
             logger.trace("Could not read card UID")
             Left(TemporaryError)
           }
-        case Right(_ /* matches FALSE, null */ ) =>
+        case Right(_ /* matches FALSE, null */) =>
           logger.trace("No card present")
           Right(None)
         case Left(statusCode) =>
@@ -65,9 +55,11 @@ case class ModifiedMfrc522CardReader private (controller: Int, chipSelect: Int, 
       Left(UnknownError)
     }.get
   }
+
+  override def close(): IO[Unit] = IO(reader.close())
 }
 
-object ModifiedMfrc522CardReader {
+object ModifiedMfrc522CardReader extends StrictLogging  {
   sealed trait ReadError
 
   object ReadError {
@@ -75,4 +67,13 @@ object ModifiedMfrc522CardReader {
     case object PermanentError extends ReadError
     case object UnknownError extends ReadError
   }
+
+  def resource(controller: Int, chipSelect: Int, resetGpio: Int): Resource[IO, ModifiedMfrc522CardReader] =
+    Resource.make(
+      IO(logger.debug("Opening RFID reader")) >>
+        IO(ModifiedMfrc522CardReader(new MFRC522(controller, chipSelect, resetGpio)))
+    )(reader =>
+      IO(logger.debug("Closing RFID reader")) >>
+        IO(reader.close())
+    )
 }

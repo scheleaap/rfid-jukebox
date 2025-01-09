@@ -1,9 +1,6 @@
 package info.maaskant.jukebox
 
-import java.net.URI
-import cats.effect.{IO, Sync}
-import cats.syntax.flatMap._
-import cats.syntax.functor._
+import cats.effect.IO
 import info.maaskant.jukebox.mopidy.MopidyUri
 import info.maaskant.jukebox.rfid.Uid
 import pureconfig.ConvertHelpers._
@@ -13,6 +10,7 @@ import pureconfig.generic.auto._
 import pureconfig.generic.semiauto._
 import pureconfig.{ConfigReader, ConfigSource}
 
+import java.net.URI
 import scala.annotation.nowarn
 import scala.concurrent.duration.FiniteDuration
 

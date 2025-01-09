@@ -13,16 +13,14 @@ ThisBuild / javacOptions ++= Seq(
 ThisBuild / scalacOptions ++= ScalacOptions.scalac213Options
 
 ThisBuild / libraryDependencies ++= {
-  val sttpClient = "2.3.0"
+  val sttpClient = "3.10.2"
   val tinylog = "2.3.2"
   Seq(
     "com.diozero" % "diozero-core" % "0.14",
     "com.github.pureconfig" %% "pureconfig" % "0.17.8",
-    "com.softwaremill.sttp.client" %% "core" % sttpClient,
-    "com.softwaremill.sttp.client" %% "play-json" % sttpClient,
-//    "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % sttpClient, // TODO Replace with httpclient-backend below once it contains Monix support
-    //"com.softwaremill.sttp.client" %% "httpclient-backend" % sttpClient,
-//    "io.monix" %% "monix" % "3.4.1",
+    "com.softwaremill.sttp.client3" %% "cats" % sttpClient,
+    "com.softwaremill.sttp.client3" %% "core" % sttpClient,
+    "com.softwaremill.sttp.client3" %% "play-json" % sttpClient,
     "org.typelevel" %% "cats-effect" % "3.5.7",
     // Logging
     "org.tinylog" % "tinylog-api" % tinylog,

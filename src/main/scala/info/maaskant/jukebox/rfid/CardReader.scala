@@ -1,9 +1,9 @@
 package info.maaskant.jukebox.rfid
 
-import cats.effect.{IO, Resource}
+import cats.effect.IO
 
-trait CardReader[R] {
-  def resource(): Resource[IO, R]
+trait CardReader {
+  def read(): IO[Option[Card]]
 
-  def read(resources: R): IO[Option[Card]]
+  def close(): IO[Unit]
 }

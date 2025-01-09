@@ -3,7 +3,7 @@ package info.maaskant.jukebox.mopidy
 import cats.effect.IO
 import info.maaskant.jukebox.Card
 import info.maaskant.jukebox.mopidy.JsonRpcWrites._
-import sttp.client.{basicRequest, _}
+import sttp.client3.{basicRequest, _}
 
 import scala.annotation.nowarn
 

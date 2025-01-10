@@ -10,8 +10,7 @@ import info.maaskant.jukebox.rfid.ModifiedMfrc522CardReader.ReadError.{Permanent
 import java.io.IOException
 import scala.util.Try
 
-case class ModifiedMfrc522CardReader private(reader: MFRC522)
-  extends CardReader with StrictLogging {
+case class ModifiedMfrc522CardReader private (reader: MFRC522) extends CardReader with StrictLogging {
 
   def read(): IO[Option[Card]] =
     IO(unsafeRead(reader))
@@ -39,7 +38,7 @@ case class ModifiedMfrc522CardReader private(reader: MFRC522)
             logger.trace("Could not read card UID")
             Left(TemporaryError)
           }
-        case Right(_ /* matches FALSE, null */) =>
+        case Right(_ /* matches FALSE, null */ ) =>
           logger.trace("No card present")
           Right(None)
         case Left(statusCode) =>
@@ -59,7 +58,7 @@ case class ModifiedMfrc522CardReader private(reader: MFRC522)
   override def close(): IO[Unit] = IO(reader.close())
 }
 
-object ModifiedMfrc522CardReader extends StrictLogging  {
+object ModifiedMfrc522CardReader extends StrictLogging {
   sealed trait ReadError
 
   object ReadError {
@@ -74,6 +73,7 @@ object ModifiedMfrc522CardReader extends StrictLogging  {
         IO(ModifiedMfrc522CardReader(new MFRC522(controller, chipSelect, resetGpio)))
     )(reader =>
       IO(logger.debug("Closing RFID reader")) >>
-        IO(reader.close())
+        IO(reader.close()) >>
+        IO.unit
     )
 }

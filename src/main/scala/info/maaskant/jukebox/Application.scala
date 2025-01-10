@@ -18,7 +18,7 @@ import sttp.client3.httpclient.cats.HttpClientCatsBackend
 import sttp.model.Uri
 
 import java.time.LocalDateTime
-import scala.concurrent.duration.{DurationInt, FiniteDuration}
+import scala.concurrent.duration.FiniteDuration
 
 object Application extends IOApp with StrictLogging {
   private val NoCardReadCountBeforeBackoff = 10
@@ -134,7 +134,7 @@ object Application extends IOApp with StrictLogging {
           )
         ).map(_ => ExitCode.Success)
       }
-      .onError(t => IO(logger.error("Fatal error", t)).map(_ => ExitCode.Error))
+      .onError(t => IO(logger.error("Fatal error", t)))
   } yield exitCode
 
   private def pipeline(

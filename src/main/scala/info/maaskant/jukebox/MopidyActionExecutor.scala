@@ -10,7 +10,8 @@ import info.maaskant.jukebox.mopidy.{MopidyClient, MopidyUri}
 import scala.util.control.NonFatal
 
 class MopidyActionExecutor(eventHooks: Option[EventHooks], mopidyClient: MopidyClient)
-    extends ActionExecutor with StrictLogging {
+    extends ActionExecutor
+    with StrictLogging {
 
   def executeAction(action: Action): IO[Boolean] =
     (action match {

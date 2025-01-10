@@ -16,7 +16,7 @@ class DefaultMopidyClient private (rpcEndpoint: Uri)(implicit sttpBackend: SttpB
       .post(rpcEndpoint)
       .body(body)
       .contentType("application/json")
-      .send()
+      .send(sttpBackend)
       .map(response => {
         if (!response.isSuccess) {
           logger.warn(

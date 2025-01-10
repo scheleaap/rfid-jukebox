@@ -12,7 +12,7 @@ jobs:
         with:
           java-version: 11
       - name: Compile, test and package
-        run: sbt compile test:test debian:packageBin
+        run: sbt compile "Test / test" "Debian / packageBin"
   release:
     name: Release
     runs-on: ubuntu-20.04

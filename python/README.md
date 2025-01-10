@@ -8,19 +8,19 @@ https://pimylifeup.com/raspberry-pi-rfid-rc522/
 ## Python Environment
 
 Installing Pipenv if you have not done so:
-```bash
+```sh
 sudo apt purge python-pip
 sudo apt install python3-pip
 pip3 install --user pipenv
 ```
 
-Creating a venv if you have not done so:
-```bash
-pipenv --three
+Installing compilation dependencies:
+```sh
+sudo apt-get install libc6-dev python3-dev
 ```
 
 Activating and using the venv:
-```bash
+```sh
 PATH=~/.local/bin:$PATH
 pipenv shell
 pipenv update

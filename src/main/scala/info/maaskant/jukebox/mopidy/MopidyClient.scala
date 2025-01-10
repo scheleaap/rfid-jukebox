@@ -1,15 +1,17 @@
 package info.maaskant.jukebox.mopidy
 
-trait MopidyClient[F[_]] {
-  def addToTracklist(uris: Seq[String]): F[Unit]
+import cats.effect.IO
 
-  def clearTracklist(): F[Unit]
+trait MopidyClient {
+  def addToTracklist(uris: Seq[String]): IO[Unit]
 
-  def pausePlayback(): F[Unit]
+  def clearTracklist(): IO[Unit]
 
-  def resumePlayback(): F[Unit]
+  def pausePlayback(): IO[Unit]
 
-  def startPlayback(): F[Unit]
+  def resumePlayback(): IO[Unit]
 
-  def stopPlayback(): F[Unit]
+  def startPlayback(): IO[Unit]
+
+  def stopPlayback(): IO[Unit]
 }

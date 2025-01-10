@@ -1,9 +1,9 @@
 package info.maaskant.jukebox.mopidy
 
+import cats.effect.IO
 import info.maaskant.jukebox.Card
 import info.maaskant.jukebox.mopidy.JsonRpcWrites._
-import monix.eval.Task
-import sttp.client.{basicRequest, _}
+import sttp.client3.{basicRequest, _}
 
 import scala.annotation.nowarn
 
@@ -13,7 +13,7 @@ object MopidyClientExperiment {
   val s = addToTracklistWrites.writes(b).toString()
   println(s)
 
-  private def callMopidy(card: Card): Task[Unit] = Task {
+  private def callMopidy(card: Card): IO[Unit] = IO {
     println(card)
     val request = basicRequest
       .post(uri"http://localhost:6680/mopidy/rpc")

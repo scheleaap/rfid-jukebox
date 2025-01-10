@@ -1,3 +1,3 @@
-addCommandAlias("compileAll", "compile; test:compile; it:compile")
+addCommandAlias("compileAll", "compile; Test / compile")
 addCommandAlias("checkFormat", "scalafmtSbtCheck; scalafmtCheckAll")
 addCommandAlias("format", "scalafmtSbt; scalafmtAll")

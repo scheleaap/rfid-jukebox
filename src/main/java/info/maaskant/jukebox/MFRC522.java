@@ -184,6 +184,7 @@ import scala.util.Right;
  * <li>Call ISO_StopCrypto() when you have finished talking to a card which requires authentication.</li>
  * </ol>
  */
+@SuppressWarnings("We don't care about warnings here")
 public class MFRC522 implements Closeable {
 	public static final byte[] DEFAULT_KEY = { (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff };
 	

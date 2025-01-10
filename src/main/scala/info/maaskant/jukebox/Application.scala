@@ -17,9 +17,68 @@ import info.maaskant.jukebox.rfid.{
 import sttp.client3.httpclient.cats.HttpClientCatsBackend
 import sttp.model.Uri
 
+import java.time.LocalDateTime
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 object Application extends IOApp with StrictLogging {
+  private val NoCardReadCountBeforeBackoff = 10
+  private val BackoffFactor: Long = 2
+
+  private case class ReadIntervalState(noCardReadCount: Int, readInterval: FiniteDuration)
+
+  private case class IterationState(
+      previousCard: Card,
+      readIntervalState: ReadIntervalState,
+      stateMachineState: StateMachine#State
+  )
+
+  private def calculateMaxReadInterval(
+      maxReadIntervalActivePeriods: FiniteDuration,
+      maxReadIntervalQuietPeriods: FiniteDuration
+  )(now: LocalDateTime): FiniteDuration =
+    now.getHour match {
+      case 0 => maxReadIntervalQuietPeriods
+      case 1 => maxReadIntervalQuietPeriods
+      case 2 => maxReadIntervalQuietPeriods
+      case 3 => maxReadIntervalQuietPeriods
+      case 4 => maxReadIntervalQuietPeriods
+      case 5 => maxReadIntervalQuietPeriods
+      case 6 => maxReadIntervalActivePeriods
+      case 7 => maxReadIntervalActivePeriods
+      case 8 => maxReadIntervalActivePeriods
+      case 9 => maxReadIntervalQuietPeriods
+      case 10 => maxReadIntervalQuietPeriods
+      case 11 => maxReadIntervalQuietPeriods
+      case 12 => maxReadIntervalQuietPeriods
+      case 13 => maxReadIntervalQuietPeriods
+      case 14 => maxReadIntervalQuietPeriods
+      case 15 => maxReadIntervalQuietPeriods
+      case 16 => maxReadIntervalQuietPeriods
+      case 17 => maxReadIntervalActivePeriods
+      case 18 => maxReadIntervalActivePeriods
+      case 19 => maxReadIntervalActivePeriods
+      case 20 => maxReadIntervalActivePeriods
+      case 21 => maxReadIntervalActivePeriods
+      case 22 => maxReadIntervalQuietPeriods
+      case 23 => maxReadIntervalQuietPeriods
+      case _ => maxReadIntervalActivePeriods
+    }
+
+  private def calculateReadInterval(
+      minReadInterval: FiniteDuration
+  )(oldState: ReadIntervalState, maxReadInterval: FiniteDuration, card: Card): (ReadIntervalState, FiniteDuration) = {
+    val newState = card match {
+      case Card.None =>
+        if (oldState.noCardReadCount < NoCardReadCountBeforeBackoff) {
+          ReadIntervalState(oldState.noCardReadCount + 1, oldState.readInterval)
+        } else {
+          ReadIntervalState(0, (oldState.readInterval * BackoffFactor).min(maxReadInterval))
+        }
+      case _ => ReadIntervalState(0, minReadInterval)
+    }
+    (newState, newState.readInterval)
+  }
+
   private def createCardMapping(albums: Map[Uid, MopidyUri], commands: Map[Uid, Command]): Map[Uid, Card] =
     albums.map { case (uid, uri) => (uid, Album(uri)) } ++
       commands.map { case (uid, command) =>
@@ -35,67 +94,9 @@ object Application extends IOApp with StrictLogging {
   private def createCardReaderResource(reader: String, config: Spi): Resource[IO, CardReader] = reader match {
     case "modified" => ModifiedMfrc522CardReader.resource(config.controller, config.chipSelect, config.resetGpio)
     case "time-based" => Resource.pure(new TimeBasedReader())
-    case "fixed-uid" => Resource.pure(new FixedUidReader(Some(Uid("ebd1a421"))))
+    case "fixed-uid" => Resource.pure(new FixedUidReader(None))
     case _ => OriginalMfrc522CardReader.resource(config.controller, config.chipSelect, config.resetGpio)
   }
-
-  override def run(args: List[String]): IO[ExitCode] =
-    for {
-      config <- Config.load()
-      _ <- IO(logger.info(s"Configuration: $config"))
-      exitCode <- resources(config)
-        .use { case (cardReader, mopidyClient) =>
-          val cardMapping: Map[Uid, Card] = createCardMapping(config.albums, config.commands)
-          val stateMachine = StateMachine(config.streamPauseTimeout)
-          val actionExecutor = new MopidyActionExecutor(config.hooks, mopidyClient)
-          val onCardChangeEventHook = config.hooks
-            .flatMap(_.onCardChange)
-            .fold(IO.unit)(runCommand(raiseError = false))
-          val initialState: IterationState = IterationState(
-            previousCard = Card.None,
-            readIntervalState = ReadIntervalState(noCardReadCount = 0, readInterval = ActiveReadInterval),
-            stateMachineState = stateMachine.Uninitialized
-          )
-
-          infinitelyIterate(
-            initialState,
-            pipeline(
-              cardReader.read _,
-              cardMapping,
-              actionExecutor,
-              onCardChangeEventHook
-            )
-          ).map(_ => ExitCode.Success)
-        }
-        .onError(t => IO(logger.error("Fatal error", t)).map(_ => ExitCode.Error))
-    } yield exitCode
-
-  private val ActiveReadInterval = 1.second // TODO Make configurable or constant
-  private val MaxReadInterval = 30.seconds // TODO Make configurable or constant
-  private val NoCardReadCountBeforeBackoff = 10 // TODO Make configurable or constant
-  private val BackoffFactor :Long = 2 // TODO Make configurable or constant
-
-  private case class ReadIntervalState(noCardReadCount: Int, readInterval: FiniteDuration)
-
-  private def calculateReadInterval(oldState: ReadIntervalState, card: Card): (ReadIntervalState, FiniteDuration) = {
-    val newState = card match {
-      case Card.None =>
-        // TODO Make MaxReadInterval dependent on hour of day
-        if (oldState.noCardReadCount < NoCardReadCountBeforeBackoff) {
-          ReadIntervalState(oldState.noCardReadCount + 1, oldState.readInterval)
-        } else {
-          ReadIntervalState(0, (oldState.readInterval * BackoffFactor).min(MaxReadInterval))
-        }
-      case _ => ReadIntervalState(0, ActiveReadInterval)
-    }
-    (newState, newState.readInterval)
-  }
-
-  private case class IterationState(
-      previousCard: Card,
-      readIntervalState: ReadIntervalState,
-      stateMachineState: StateMachine#State
-  )
 
   private def infinitelyIterate[S](initialState: S, iteration: S => IO[S]): IO[S] = {
     def loop(oldState: S): IO[S] = {
@@ -104,38 +105,78 @@ object Application extends IOApp with StrictLogging {
     loop(initialState)
   }
 
+  override def run(args: List[String]): IO[ExitCode] = for {
+    config <- Config.load()
+    _ <- IO(logger.info(s"Configuration: $config"))
+    exitCode <- resources(config)
+      .use { case (cardReader, mopidyClient) =>
+        val cardMapping: Map[Uid, Card] = createCardMapping(config.albums, config.commands)
+        val stateMachine = StateMachine(config.streamPauseTimeout)
+        val actionExecutor = new MopidyActionExecutor(config.hooks, mopidyClient)
+        val onCardChangeEventHook = config.hooks
+          .flatMap(_.onCardChange)
+          .fold(IO.unit)(runCommand(raiseError = false))
+        val initialState: IterationState = IterationState(
+          previousCard = Card.None,
+          readIntervalState = ReadIntervalState(noCardReadCount = 0, readInterval = config.minReadInterval),
+          stateMachineState = stateMachine.Uninitialized
+        )
+
+        infinitelyIterate(
+          initialState,
+          pipeline(
+            cardReader.read _,
+            cardMapping,
+            actionExecutor,
+            onCardChangeEventHook,
+            calculateMaxReadInterval(config.maxReadIntervalActivePeriods, config.maxReadIntervalQuietPeriods),
+            calculateReadInterval(config.minReadInterval)
+          )
+        ).map(_ => ExitCode.Success)
+      }
+      .onError(t => IO(logger.error("Fatal error", t)).map(_ => ExitCode.Error))
+  } yield exitCode
+
   private def pipeline(
       readPhysicalCard: () => IO[Option[PhysicalCard]],
       cardMapping: Map[Uid, Card],
       actionExecutor: ActionExecutor,
-      onCardChangeEventHook: IO[Unit]
-  )(oldState: IterationState): IO[IterationState] = {
-    for {
-      physicalCardOption <- readPhysicalCard()
-      logicalCard = physicalCardToLogicalCard(physicalCardOption, cardMapping)
-      hasLogicalCardChanged = oldState.previousCard != logicalCard
-      _ <-
-        if (hasLogicalCardChanged) {
-          IO(logger.info(s"Logical card: $logicalCard")) >>
-            onCardChangeEventHook
-        } else { IO.unit }
-      (newReadIntervalState, sleepDuration) = calculateReadInterval(oldState.readIntervalState, logicalCard)
-      newStateMachineState <- updateStateAndExecuteAction(actionExecutor)(oldState.stateMachineState, logicalCard)
-      _ <- IO.sleep(sleepDuration)
-    } yield IterationState(logicalCard, newReadIntervalState, newStateMachineState)
-  }
+      onCardChangeEventHook: IO[Unit],
+      calculateMaxReadInterval: LocalDateTime => FiniteDuration,
+      calculateReadInterval: (ReadIntervalState, FiniteDuration, Card) => (ReadIntervalState, FiniteDuration)
+  )(oldState: IterationState): IO[IterationState] = for {
+    _ <- IO(logger.debug("Begin pipeline"))
+    physicalCardOption <- readPhysicalCard()
+    logicalCard = physicalCardToLogicalCard(physicalCardOption, cardMapping)
+    hasLogicalCardChanged = oldState.previousCard != logicalCard
+    _ <-
+      if (hasLogicalCardChanged) {
+        IO(logger.info(s"Logical card: $logicalCard")) >>
+          onCardChangeEventHook
+      } else { IO.unit }
+    now <- IO(LocalDateTime.now())
+    maxReadInterval = calculateMaxReadInterval(now)
+    _ <- IO(logger.debug(s"New max read interval: $maxReadInterval"))
+    (newReadIntervalState, readInterval) = calculateReadInterval(
+      oldState.readIntervalState,
+      maxReadInterval,
+      logicalCard
+    )
+    _ <- IO(logger.debug(s"New read interval: $readInterval"))
+    newStateMachineState <- updateStateAndExecuteAction(actionExecutor)(oldState.stateMachineState, logicalCard)
+    _ <- IO.sleep(readInterval)
+  } yield IterationState(logicalCard, newReadIntervalState, newStateMachineState)
 
   private def physicalCardToLogicalCard(pco: Option[PhysicalCard], cardMapping: Map[Uid, Card]): Card =
     pco
       .map(pc => cardMapping.getOrElse(pc.uid, Card.Unknown(pc.uid)))
       .getOrElse(Card.None)
 
-  private def resources(config: Config): Resource[IO, (CardReader, DefaultMopidyClient)] =
-    for {
-      sttpBackend <- HttpClientCatsBackend.resource[IO]()
-      mopidyClient = DefaultMopidyClient(Uri.apply(config.mopidy.baseUrl))(sttpBackend)
-      cardReader <- createCardReaderResource(config.reader, config.spi)
-    } yield (cardReader, mopidyClient)
+  private def resources(config: Config): Resource[IO, (CardReader, DefaultMopidyClient)] = for {
+    sttpBackend <- HttpClientCatsBackend.resource[IO]()
+    mopidyClient = DefaultMopidyClient(Uri.apply(config.mopidy.baseUrl))(sttpBackend)
+    cardReader <- createCardReaderResource(config.reader, config.spi)
+  } yield (cardReader, mopidyClient)
 
   private def updateStateAndExecuteAction(
       actionExecutor: ActionExecutor

@@ -44,7 +44,9 @@ object Config {
 case class Config(
     mopidy: Mopidy,
     reader: String,
-    readInterval: FiniteDuration,
+    minReadInterval: FiniteDuration,
+    maxReadIntervalActivePeriods: FiniteDuration,
+    maxReadIntervalQuietPeriods: FiniteDuration,
     spi: Spi,
     streamPauseTimeout: FiniteDuration,
     albums: Map[Uid, MopidyUri],

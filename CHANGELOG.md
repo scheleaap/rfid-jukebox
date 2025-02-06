@@ -1,5 +1,18 @@
 # Changelog
 
+# [1.4.0](https://github.com/scheleaap/rfid-jukebox/compare/v1.3.2...v1.4.0) (2025-02-06)
+
+
+### Bug Fixes
+
+* Update Pipenv for Python ([5779070](https://github.com/scheleaap/rfid-jukebox/commit/5779070c262c0131d568e90f444209851fce5561))
+* Use modified RFID reader by default ([e8fbb03](https://github.com/scheleaap/rfid-jukebox/commit/e8fbb03cf5348a6d9de91308e3fac0210301e1c4))
+
+
+### Features
+
+* Incremental backoff for reading cards ([#6](https://github.com/scheleaap/rfid-jukebox/issues/6)) ([d228754](https://github.com/scheleaap/rfid-jukebox/commit/d228754a525414f19beeafa60929d455cf6d6126))
+
 ## [1.3.2](https://github.com/scheleaap/rfid-jukebox/compare/v1.3.1...v1.3.2) (2021-05-08)
 
 

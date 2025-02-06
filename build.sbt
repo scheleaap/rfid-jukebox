@@ -3,11 +3,11 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / scalaVersion := "2.13.15"
 
 ThisBuild / javacOptions ++= Seq(
-  // Do not change. Raspberry Pi Zero does not support OpenJDK >= 9.
+  // Before you upgrade, check if the version is available for the Raspberry Pi Zero.
   "-source",
-  "1.8",
+  "17",
   "-target",
-  "1.8",
+  "17",
   "-Xlint"
 )
 
@@ -47,5 +47,5 @@ Linux / maintainer := "scheleaap"
 Linux / packageSummary := "RFID Jukebox"
 Linux / packageDescription := "An RFID-based jukebox client for Mopidy with Spotify"
 
-// Do not change. Raspberry Pi Zero does not support OpenJDK >= 9.
-Debian / debianPackageDependencies := Seq("openjdk-8-jre-headless")
+// Before you upgrade, check if the version is available for the Raspberry Pi Zero.
+Debian / debianPackageDependencies := Seq("openjdk-17-jre-headless")

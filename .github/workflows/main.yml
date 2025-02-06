@@ -12,6 +12,7 @@ jobs:
         with:
           java-version: 17
           distribution: zulu
+          cache: 'sbt'
       - name: Compile, test and package
         run: sbt compile "Test / test" "Debian / packageBin"
   release:

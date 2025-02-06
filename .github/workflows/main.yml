@@ -12,6 +12,7 @@ jobs:
         with:
           java-version: 17
           distribution: zulu
+          cache: sbt
       - name: Setup sbt launcher
         uses: sbt/setup-sbt@v1
       - name: Compile, test and package

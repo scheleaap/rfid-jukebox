@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.3](https://github.com/scheleaap/rfid-jukebox/compare/v1.4.2...v1.4.3) (2025-02-06)
+
+
+### Bug Fixes
+
+* Add more IO.blocking ([df3b9b2](https://github.com/scheleaap/rfid-jukebox/commit/df3b9b28a345f049d2de58a21d5c997bb97b8db7))
+* Revert back to OpenJDK 8 ([ea31504](https://github.com/scheleaap/rfid-jukebox/commit/ea31504dbb3b2a161709d4b64dde60e07b766308))
+* Revert back to OpenJDK 8 ([4097242](https://github.com/scheleaap/rfid-jukebox/commit/4097242152e4110a135c4a45e42f1564d9ec4c82))
+
 ## [1.4.2](https://github.com/scheleaap/rfid-jukebox/compare/v1.4.1...v1.4.2) (2025-02-06)
 
 

@@ -5,7 +5,7 @@ The code is based on [this example](https://github.com/mattjlewis/diozero/blob/m
 
 Synchronizing the code to a Raspberry Pi for development purposes:
 ```
-echo 'version := "0.0.1-SNAPSHOT"' > version.sbt && sbt debian:packageBin && rsync -aPv ~/dev/rfid-jukebox/target/rfid-jukebox-0.0.1-SNAPSHOT/usr/share/rfid-jukebox/ pi@framboos:~/rfid-jukebox-tmp
+echo 'version := "0.0.1-SNAPSHOT"' > version.sbt && sbt "Debian / packageBin" && rsync -aPv ~/dev/rfid-jukebox/target/rfid-jukebox-0.0.1-SNAPSHOT/usr/share/rfid-jukebox/ pi@framboos:~/rfid-jukebox-tmp
 ```
 
 Note: Java 11 won't work on a Raspberry Pi Zero.

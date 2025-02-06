@@ -32,6 +32,9 @@ ThisBuild / libraryDependencies ++= {
   )
 }
 
+// Do not generate documentation
+Compile / doc / sources := Seq.empty
+
 // Packaging
 enablePlugins(
   JavaServerAppPackaging,
@@ -40,9 +43,7 @@ enablePlugins(
 )
 
 Linux / maintainer := "scheleaap"
-
 Linux / packageSummary := "RFID Jukebox"
-
 Linux / packageDescription := "An RFID-based jukebox client for Mopidy with Spotify"
 
 Debian / debianPackageDependencies := Seq("openjdk-11-jre-headless")

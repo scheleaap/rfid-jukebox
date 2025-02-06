@@ -146,7 +146,7 @@ object Application extends IOApp with StrictLogging {
       calculateMaxReadInterval: LocalDateTime => FiniteDuration,
       calculateReadInterval: (ReadIntervalState, FiniteDuration, Card) => (ReadIntervalState, FiniteDuration)
   )(oldState: IterationState): IO[IterationState] = for {
-    _ <- IO(logger.debug("Begin pipeline"))
+    _ <- IO(logger.trace("Begin pipeline"))
     physicalCardOption <- readPhysicalCard()
     logicalCard = physicalCardToLogicalCard(physicalCardOption, cardMapping)
     hasLogicalCardChanged = oldState.previousCard != logicalCard
@@ -165,6 +165,7 @@ object Application extends IOApp with StrictLogging {
     )
     _ <- IO(logger.debug(s"New read interval: $readInterval"))
     newStateMachineState <- updateStateAndExecuteAction(actionExecutor)(oldState.stateMachineState, logicalCard)
+    _ <- IO(logger.trace("Finished pipeline, ready to sleep"))
     _ <- IO.sleep(readInterval)
   } yield IterationState(logicalCard, newReadIntervalState, newStateMachineState)
 

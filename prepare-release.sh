@@ -11,4 +11,4 @@ EOM
 [[ $# -ne 1 ]] && { usage; }
 
 echo "version := \"$1\"" > version.sbt
-sbt debian:packageBin
+sbt "Debian / packageBin"

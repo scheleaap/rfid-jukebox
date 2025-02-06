@@ -3,28 +3,29 @@ on: [push]
 jobs:
   compile-test-package:
     name: Compile, test, package
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Clone repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v2
         with:
           java-version: 17
+          distribution: zulu
       - name: Compile, test and package
         run: sbt compile "Test / test" "Debian / packageBin"
   release:
     name: Release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: compile-test-package
     if: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - name: Clone repository
         uses: actions/checkout@v2
-      - run: |
-          pwd
-          find .
-          cat .git/config
+      # - run: |
+      #    pwd
+      #    find .
+      #    cat .git/config
       - name: Set up Node
         uses: actions/setup-node@v2
         with:

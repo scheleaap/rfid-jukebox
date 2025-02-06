@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/scheleaap/rfid-jukebox/compare/v1.4.0...v1.4.1) (2025-02-06)
+
+
+### Bug Fixes
+
+* Use IO.blocking to read RFID cards ([69d2f63](https://github.com/scheleaap/rfid-jukebox/commit/69d2f6306ba31ce0629a4091ca72633c6644c66b))
+
 # [1.4.0](https://github.com/scheleaap/rfid-jukebox/compare/v1.3.2...v1.4.0) (2025-02-06)
 
 

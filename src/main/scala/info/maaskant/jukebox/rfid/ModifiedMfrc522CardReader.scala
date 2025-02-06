@@ -13,7 +13,7 @@ import scala.util.Try
 case class ModifiedMfrc522CardReader private (reader: MFRC522) extends CardReader with StrictLogging {
 
   def read(): IO[Option[Card]] =
-    IO(unsafeRead(reader))
+    IO.blocking(unsafeRead(reader))
       .flatMap {
         case Left(PermanentError) =>
           val message = "Permanent card reader error"

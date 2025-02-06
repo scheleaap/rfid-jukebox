@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.StrictLogging
 import scala.sys.process._
 
 object Process extends StrictLogging {
-  def runCommand(raiseError: Boolean)(command: String): IO[Unit] = IO {
+  def runCommand(raiseError: Boolean)(command: String): IO[Unit] = IO.blocking {
     logger.debug(s"Executing local command $command")
     command.!
   }.flatMap { exitCode =>

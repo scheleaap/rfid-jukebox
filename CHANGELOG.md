@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/scheleaap/rfid-jukebox/compare/v1.4.1...v1.4.2) (2025-02-06)
+
+
+### Bug Fixes
+
+* Small changes ([1c289a0](https://github.com/scheleaap/rfid-jukebox/commit/1c289a07daa11543720ee975cba2556b072b17ce))
+
 ## [1.4.1](https://github.com/scheleaap/rfid-jukebox/compare/v1.4.0...v1.4.1) (2025-02-06)
 
 

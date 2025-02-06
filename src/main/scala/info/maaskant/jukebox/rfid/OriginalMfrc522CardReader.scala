@@ -9,7 +9,7 @@ import scala.util.Try
 case class OriginalMfrc522CardReader private (reader: MFRC522) extends CardReader with StrictLogging {
 
   def read(): IO[Option[Card]] =
-    IO(unsafeRead(reader))
+    IO.blocking(unsafeRead(reader))
 
   def unsafeRead(reader: MFRC522): Option[Card] = {
     Try {
@@ -36,14 +36,14 @@ case class OriginalMfrc522CardReader private (reader: MFRC522) extends CardReade
     }.get
   }
 
-  override def close(): IO[Unit] = IO(reader.close())
+  override def close(): IO[Unit] = IO.blocking(reader.close())
 }
 
 object OriginalMfrc522CardReader extends StrictLogging {
   def resource(controller: Int, chipSelect: Int, resetGpio: Int): Resource[IO, OriginalMfrc522CardReader] =
     Resource.make(
       IO(logger.debug("Opening RFID reader")) >>
-        IO(OriginalMfrc522CardReader(new MFRC522(controller, chipSelect, resetGpio)))
+        IO.blocking(OriginalMfrc522CardReader(new MFRC522(controller, chipSelect, resetGpio)))
     )(reader =>
       IO(logger.debug("Closing RFID reader")) >>
         IO(reader.close()) >>

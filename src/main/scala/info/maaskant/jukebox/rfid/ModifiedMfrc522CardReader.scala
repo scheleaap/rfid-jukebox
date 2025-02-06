@@ -73,7 +73,7 @@ object ModifiedMfrc522CardReader extends StrictLogging {
         IO(ModifiedMfrc522CardReader(new MFRC522(controller, chipSelect, resetGpio)))
     )(reader =>
       IO(logger.debug("Closing RFID reader")) >>
-        IO(reader.close()) >>
+        IO.blocking(reader.close()) >>
         IO.unit
     )
 }

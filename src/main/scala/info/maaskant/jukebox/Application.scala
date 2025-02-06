@@ -122,17 +122,18 @@ object Application extends IOApp with StrictLogging {
           stateMachineState = stateMachine.Uninitialized
         )
 
-        infinitelyIterate(
-          initialState,
-          pipeline(
-            cardReader.read _,
-            cardMapping,
-            actionExecutor,
-            onCardChangeEventHook,
-            calculateMaxReadInterval(config.maxReadIntervalActivePeriods, config.maxReadIntervalQuietPeriods),
-            calculateReadInterval(config.minReadInterval)
-          )
-        ).map(_ => ExitCode.Success)
+        IO(logger.info("Application started")) >>
+          infinitelyIterate(
+            initialState,
+            pipeline(
+              cardReader.read _,
+              cardMapping,
+              actionExecutor,
+              onCardChangeEventHook,
+              calculateMaxReadInterval(config.maxReadIntervalActivePeriods, config.maxReadIntervalQuietPeriods),
+              calculateReadInterval(config.minReadInterval)
+            )
+          ).map(_ => ExitCode.Success)
       }
       .onError(t => IO(logger.error("Fatal error", t)))
   } yield exitCode

@@ -8,11 +8,12 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v4
       - name: Set up JDK
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: zulu
-          cache: 'sbt'
+      - name: Setup sbt launcher
+        uses: sbt/setup-sbt@v1
       - name: Compile, test and package
         run: sbt compile "Test / test" "Debian / packageBin"
   release:

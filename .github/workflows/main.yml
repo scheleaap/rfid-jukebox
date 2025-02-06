@@ -34,12 +34,12 @@ jobs:
       # https://semantic-release.gitbook.io/semantic-release/recipes/recipes/travis#non-node-js-projects-configuration
       - name: Install semantic-release
         run: |
-          npm install -g semantic-release \
-          @semantic-release/changelog \
-          @semantic-release/commit-analyzer \
-          @semantic-release/exec \
-          @semantic-release/git \
-          @semantic-release/release-notes-generator
+          npm install -g semantic-release@24.2.1 \
+          @semantic-release/changelog@6.0.3 \
+          @semantic-release/commit-analyzer@13.0.1 \
+          @semantic-release/exec@7.0.3 \
+          @semantic-release/git@10.0.1 \
+          @semantic-release/release-notes-generator@14.0.3
       - name: Create a release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

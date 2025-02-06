@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.4](https://github.com/scheleaap/rfid-jukebox/compare/v1.4.3...v1.4.4) (2025-02-06)
+
+
+### Bug Fixes
+
+* Upgrade to OpenJDK 17 ([b0b5fff](https://github.com/scheleaap/rfid-jukebox/commit/b0b5fff1b6de8d06519570ad09b1c9da613a9916))
+
 ## [1.4.3](https://github.com/scheleaap/rfid-jukebox/compare/v1.4.2...v1.4.3) (2025-02-06)
 
 

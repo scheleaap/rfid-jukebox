@@ -1,0 +1,3 @@
+# MFRC522.java is third-party code, copied rather than authored here.
+# Excluding it from Linguist stats keeps the repo classified as Scala.
+src/main/java/info/maaskant/jukebox/MFRC522.java linguist-vendored
